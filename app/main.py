@@ -1,0 +1,67 @@
+"""
+ClosetMate API 메인 진입점
+"""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from .core.config import settings
+from .core.database import engine, Base
+from .routers import (
+    auth_router,
+    closet_router,
+    outfit_router,
+    favorite_router
+)
+from .models import User, ClosetItem, TodayOutfit, FavoriteOutfit  # 테이블 생성용 import
+
+# FastAPI 앱 생성
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version="1.0.0",
+    description="ClosetMate API - 옷장 관리 및 코디 추천 서비스"
+)
+
+# CORS 설정 (필요한 경우)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 프로덕션에서는 특정 origin만 허용하도록 변경
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 데이터베이스 테이블 생성
+@app.on_event("startup")
+def on_startup():
+    """
+    앱 시작 시 데이터베이스 테이블 생성
+    """
+    Base.metadata.create_all(bind=engine)
+
+
+# 라우터 등록
+app.include_router(auth_router)
+app.include_router(closet_router)
+app.include_router(outfit_router)
+app.include_router(favorite_router)
+
+
+@app.get("/")
+def root():
+    """
+    루트 엔드포인트
+    """
+    return {
+        "message": "ClosetMate API",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
+
+
+@app.get("/health")
+def health_check():
+    """
+    헬스 체크 엔드포인트
+    """
+    return {"status": "healthy"}
+

@@ -1,0 +1,2 @@
+# ClosetMate API Application
+
