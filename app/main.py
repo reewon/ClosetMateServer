@@ -40,10 +40,10 @@ def on_startup():
 
 
 # 라우터 등록
-app.include_router(auth_router)
-app.include_router(closet_router)
-app.include_router(outfit_router)
-app.include_router(favorite_router)
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(closet_router, prefix="/api/v1")
+app.include_router(outfit_router, prefix="/api/v1")
+app.include_router(favorite_router, prefix="/api/v1")
 
 
 @app.get("/")
