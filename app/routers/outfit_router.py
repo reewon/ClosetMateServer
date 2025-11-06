@@ -39,7 +39,7 @@ def _convert_to_today_outfit_response(today_outfit, db: Session) -> TodayOutfitR
         TodayOutfitResponse: 응답 스키마
     """
     response_data = {}
-    categories = ["상의", "하의", "신발", "아우터"]
+    categories = ["top", "bottom", "shoes", "outer"]
     
     for category in categories:
         item_id = getattr(today_outfit, f"{category}_id")
@@ -93,10 +93,7 @@ def update_outfit_item_endpoint(
     """
     update_outfit_item(db, current_user.id, request.category, request.item_id)
     
-    category_names = {"상의": "상의", "하의": "하의", "신발": "신발", "아우터": "아우터"}
-    category_name = category_names.get(request.category, request.category)
-    
-    return MessageResponse(message=f"{category_name}가 변경되었습니다.")
+    return MessageResponse(message=f"{request.category} 변경 완료")
 
 
 @router.put("/clear", response_model=MessageResponse)
@@ -118,10 +115,7 @@ def clear_outfit_category_endpoint(
     """
     clear_outfit_category(db, current_user.id, request.category)
     
-    category_names = {"상의": "상의", "하의": "하의", "신발": "신발", "아우터": "아우터"}
-    category_name = category_names.get(request.category, request.category)
-    
-    return MessageResponse(message=f"{category_name}가 비워졌습니다.")
+    return MessageResponse(message=f"{request.category} 비우기 완료")
 
 
 @router.post("/recommend", response_model=OutfitRecommendResponse)
@@ -144,30 +138,30 @@ def recommend_outfit_endpoint(
     
     # 이미 선택된 아이템 추출
     existing_items = {}
-    if today_outfit.상의_id:
-        existing_items["상의"] = today_outfit.상의_id
-    if today_outfit.하의_id:
-        existing_items["하의"] = today_outfit.하의_id
-    if today_outfit.신발_id:
-        existing_items["신발"] = today_outfit.신발_id
-    if today_outfit.아우터_id:
-        existing_items["아우터"] = today_outfit.아우터_id
+    if today_outfit.top_id:
+        existing_items["top"] = today_outfit.top_id
+    if today_outfit.bottom_id:
+        existing_items["bottom"] = today_outfit.bottom_id
+    if today_outfit.shoes_id:
+        existing_items["shoes"] = today_outfit.shoes_id
+    if today_outfit.outer_id:
+        existing_items["outer"] = today_outfit.outer_id
     
     # AI 추천 실행 (현재는 랜덤)
     recommended_ids = recommend_outfit(db, current_user.id, existing_items)
     
     # 추천 결과를 오늘의 코디에 반영
-    today_outfit.상의_id = recommended_ids.get("상의")
-    today_outfit.하의_id = recommended_ids.get("하의")
-    today_outfit.신발_id = recommended_ids.get("신발")
-    today_outfit.아우터_id = recommended_ids.get("아우터")
+    today_outfit.top_id = recommended_ids.get("top")
+    today_outfit.bottom_id = recommended_ids.get("bottom")
+    today_outfit.shoes_id = recommended_ids.get("shoes")
+    today_outfit.outer_id = recommended_ids.get("outer")
     
     db.commit()
     db.refresh(today_outfit)
     
     # 응답 형식으로 변환
     response_data = {}
-    categories = ["상의", "하의", "신발", "아우터"]
+    categories = ["top", "bottom", "shoes", "outer"]
     
     for category in categories:
         item_id = recommended_ids.get(category)

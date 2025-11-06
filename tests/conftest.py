@@ -138,14 +138,14 @@ def test_closet_items(test_db: Session, test_user: User) -> list[ClosetItem]:
         list[ClosetItem]: 생성된 옷장 아이템 리스트
     """
     items = [
-        ClosetItem(user_id=test_user.id, category="상의", name="화이트 티셔츠"),
-        ClosetItem(user_id=test_user.id, category="상의", name="블랙 후드티"),
-        ClosetItem(user_id=test_user.id, category="하의", name="베이지 팬츠"),
-        ClosetItem(user_id=test_user.id, category="하의", name="블랙 슬랙스"),
-        ClosetItem(user_id=test_user.id, category="신발", name="화이트 운동화"),
-        ClosetItem(user_id=test_user.id, category="신발", name="컨버스"),
-        ClosetItem(user_id=test_user.id, category="아우터", name="블루 데님 재킷"),
-        ClosetItem(user_id=test_user.id, category="아우터", name="블랙 패딩"),
+        ClosetItem(user_id=test_user.id, category="top", name="화이트 티셔츠"),
+        ClosetItem(user_id=test_user.id, category="top", name="블랙 후드티"),
+        ClosetItem(user_id=test_user.id, category="bottom", name="베이지 팬츠"),
+        ClosetItem(user_id=test_user.id, category="bottom", name="블랙 슬랙스"),
+        ClosetItem(user_id=test_user.id, category="shoes", name="화이트 운동화"),
+        ClosetItem(user_id=test_user.id, category="shoes", name="컨버스"),
+        ClosetItem(user_id=test_user.id, category="outer", name="블루 데님 재킷"),
+        ClosetItem(user_id=test_user.id, category="outer", name="블랙 패딩"),
     ]
     
     for item in items:
@@ -175,10 +175,10 @@ def test_today_outfit(test_db: Session, test_user: User, test_closet_items: list
     # 각 카테고리의 첫 번째 아이템 선택
     outfit = TodayOutfit(
         user_id=test_user.id,
-        상의_id=test_closet_items[0].id,  # 화이트 티셔츠
-        하의_id=test_closet_items[2].id,  # 베이지 팬츠
-        신발_id=test_closet_items[4].id,  # 화이트 운동화
-        아우터_id=test_closet_items[6].id,  # 블루 데님 재킷
+        top_id=test_closet_items[0].id,  # 화이트 티셔츠
+        bottom_id=test_closet_items[2].id,  # 베이지 팬츠
+        shoes_id=test_closet_items[4].id,  # 화이트 운동화
+        outer_id=test_closet_items[6].id,  # 블루 데님 재킷
     )
     
     test_db.add(outfit)
@@ -204,10 +204,10 @@ def test_favorite_outfit(test_db: Session, test_user: User, test_closet_items: l
     favorite = FavoriteOutfit(
         user_id=test_user.id,
         name="주말 데일리룩",
-        상의_id=test_closet_items[0].id,  # 화이트 티셔츠
-        하의_id=test_closet_items[2].id,  # 베이지 팬츠
-        신발_id=test_closet_items[4].id,  # 화이트 운동화
-        아우터_id=test_closet_items[6].id,  # 블루 데님 재킷
+        top_id=test_closet_items[0].id,  # 화이트 티셔츠
+        bottom_id=test_closet_items[2].id,  # 베이지 팬츠
+        shoes_id=test_closet_items[4].id,  # 화이트 운동화
+        outer_id=test_closet_items[6].id,  # 블루 데님 재킷
     )
     
     test_db.add(favorite)
@@ -231,10 +231,10 @@ def empty_today_outfit(test_db: Session, test_user: User) -> TodayOutfit:
     """
     outfit = TodayOutfit(
         user_id=test_user.id,
-        상의_id=None,
-        하의_id=None,
-        신발_id=None,
-        아우터_id=None,
+        top_id=None,
+        bottom_id=None,
+        shoes_id=None,
+        outer_id=None,
     )
     
     test_db.add(outfit)

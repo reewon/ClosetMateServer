@@ -13,10 +13,10 @@ class ItemInfo(BaseModel):
 
 class TodayOutfitResponse(BaseModel):
     """오늘의 코디 응답 스키마"""
-    상의: Optional[ItemInfo] = None
-    하의: Optional[ItemInfo] = None
-    신발: Optional[ItemInfo] = None
-    아우터: Optional[ItemInfo] = None
+    top: Optional[ItemInfo] = None
+    bottom: Optional[ItemInfo] = None
+    shoes: Optional[ItemInfo] = None
+    outer: Optional[ItemInfo] = None
 
     class Config:
         from_attributes = True
@@ -24,21 +24,21 @@ class TodayOutfitResponse(BaseModel):
 
 class OutfitUpdateRequest(BaseModel):
     """코디 아이템 선택/변경 요청 스키마"""
-    category: str  # 상의, 하의, 신발, 아우터
+    category: str  # top, bottom, shoes, outer
     item_id: int
 
 
 class OutfitClearRequest(BaseModel):
     """코디 카테고리 비우기 요청 스키마"""
-    category: str  # 상의, 하의, 신발, 아우터
+    category: str  # top, bottom, shoes, outer
 
 
 class OutfitRecommendResponse(BaseModel):
     """AI 추천 코디 응답 스키마"""
-    상의: Optional[ItemInfo] = None
-    하의: Optional[ItemInfo] = None
-    신발: Optional[ItemInfo] = None
-    아우터: Optional[ItemInfo] = None
+    top: Optional[ItemInfo] = None
+    bottom: Optional[ItemInfo] = None
+    shoes: Optional[ItemInfo] = None
+    outer: Optional[ItemInfo] = None
 
     class Config:
         from_attributes = True

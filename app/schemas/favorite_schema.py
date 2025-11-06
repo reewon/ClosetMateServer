@@ -15,10 +15,10 @@ class FavoriteOutfitListItem(BaseModel):
 class FavoriteOutfitDetail(BaseModel):
     """즐겨찾는 코디 상세 정보 스키마"""
     name: str
-    상의: Optional[ItemInfo] = None
-    하의: Optional[ItemInfo] = None
-    신발: Optional[ItemInfo] = None
-    아우터: Optional[ItemInfo] = None
+    top: Optional[ItemInfo] = None
+    bottom: Optional[ItemInfo] = None
+    shoes: Optional[ItemInfo] = None
+    outer: Optional[ItemInfo] = None
 
     class Config:
         from_attributes = True

@@ -21,7 +21,7 @@ router = APIRouter(prefix="/closet", tags=["Closet"])
 
 @router.get("/{category}", response_model=List[ClosetItemResponse])
 def get_closet_items(
-    category: str = Path(..., description="카테고리 (상의, 하의, 신발, 아우터)"),
+    category: str = Path(..., description="카테고리 (top, bottom, shoes, outer)"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -39,7 +39,7 @@ def get_closet_items(
     Raises:
         BadRequestException: 잘못된 카테고리인 경우
     """
-    valid_categories = ["상의", "하의", "신발", "아우터"]
+    valid_categories = ["top", "bottom", "shoes", "outer"]
     if category not in valid_categories:
         raise BadRequestException(
             message=f"잘못된 카테고리입니다. 가능한 값: {', '.join(valid_categories)}",
@@ -56,7 +56,7 @@ def get_closet_items(
 
 @router.post("/{category}", response_model=MessageResponse)
 def create_closet_item(
-    category: str = Path(..., description="카테고리 (상의, 하의, 신발, 아우터)"),
+    category: str = Path(..., description="카테고리 (top, bottom, shoes, outer)"),
     item_data: ClosetItemCreate = ...,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -76,7 +76,7 @@ def create_closet_item(
     Raises:
         BadRequestException: 잘못된 카테고리인 경우
     """
-    valid_categories = ["상의", "하의", "신발", "아우터"]
+    valid_categories = ["top", "bottom", "shoes", "outer"]
     if category not in valid_categories:
         raise BadRequestException(
             message=f"잘못된 카테고리입니다. 가능한 값: {', '.join(valid_categories)}",

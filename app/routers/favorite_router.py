@@ -40,7 +40,7 @@ def _convert_to_favorite_detail(favorite, db: Session) -> FavoriteOutfitDetail:
         FavoriteOutfitDetail: 응답 스키마
     """
     response_data = {"name": favorite.name}
-    categories = ["상의", "하의", "신발", "아우터"]
+    categories = ["top", "bottom", "shoes", "outer"]
     
     for category in categories:
         item_id = getattr(favorite, f"{category}_id")

@@ -8,7 +8,7 @@ class ClosetItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    category = Column(String)  # 상의, 하의, 신발, 아우터
+    category = Column(String)  # top, bottom, shoes, outer
     name = Column(String)
     image_url = Column(String, nullable=True)
     

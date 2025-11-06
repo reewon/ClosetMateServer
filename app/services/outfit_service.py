@@ -30,10 +30,10 @@ def get_today_outfit(db: Session, user_id: int) -> TodayOutfit:
     if not today_outfit:
         today_outfit = TodayOutfit(
             user_id=user_id,
-            상의_id=None,
-            하의_id=None,
-            신발_id=None,
-            아우터_id=None,
+            top_id=None,
+            bottom_id=None,
+            shoes_id=None,
+            outer_id=None,
             updated_at=datetime.utcnow()
         )
         db.add(today_outfit)
@@ -55,7 +55,7 @@ def update_outfit_item(
     Args:
         db: DB 세션
         user_id: 사용자 ID
-        category: 카테고리 (상의, 하의, 신발, 아우터)
+        category: 카테고리 (top, bottom, shoes, outer)
         item_id: 아이템 ID
     
     Returns:
@@ -64,7 +64,7 @@ def update_outfit_item(
     Raises:
         BadRequestException: 잘못된 카테고리 또는 아이템이 없는 경우
     """
-    valid_categories = ["상의", "하의", "신발", "아우터"]
+    valid_categories = ["top", "bottom", "shoes", "outer"]
     if category not in valid_categories:
         raise BadRequestException(
             message=f"잘못된 카테고리입니다. 가능한 값: {', '.join(valid_categories)}",
@@ -89,10 +89,10 @@ def update_outfit_item(
     
     # 카테고리별 필드 업데이트
     category_field_map = {
-        "상의": "상의_id",
-        "하의": "하의_id",
-        "신발": "신발_id",
-        "아우터": "아우터_id"
+        "top": "top_id",
+        "bottom": "bottom_id",
+        "shoes": "shoes_id",
+        "outer": "outer_id"
     }
     
     setattr(today_outfit, category_field_map[category], item_id)
@@ -115,7 +115,7 @@ def clear_outfit_category(
     Args:
         db: DB 세션
         user_id: 사용자 ID
-        category: 카테고리 (상의, 하의, 신발, 아우터)
+        category: 카테고리 (top, bottom, shoes, outer)
     
     Returns:
         TodayOutfit: 업데이트된 오늘의 코디 객체
@@ -123,7 +123,7 @@ def clear_outfit_category(
     Raises:
         BadRequestException: 잘못된 카테고리인 경우
     """
-    valid_categories = ["상의", "하의", "신발", "아우터"]
+    valid_categories = ["top", "bottom", "shoes", "outer"]
     if category not in valid_categories:
         raise BadRequestException(
             message=f"잘못된 카테고리입니다. 가능한 값: {', '.join(valid_categories)}",
@@ -135,10 +135,10 @@ def clear_outfit_category(
     
     # 카테고리별 필드 비우기
     category_field_map = {
-        "상의": "상의_id",
-        "하의": "하의_id",
-        "신발": "신발_id",
-        "아우터": "아우터_id"
+        "top": "top_id",
+        "bottom": "bottom_id",
+        "shoes": "shoes_id",
+        "outer": "outer_id"
     }
     
     setattr(today_outfit, category_field_map[category], None)

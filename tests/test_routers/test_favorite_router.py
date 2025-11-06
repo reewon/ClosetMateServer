@@ -71,24 +71,24 @@ class TestGetFavorites:
         favorites_data = [
             {
                 "name": "주말 코디",
-                "상의_id": test_closet_items[0].id,
-                "하의_id": test_closet_items[2].id,
-                "신발_id": test_closet_items[4].id,
-                "아우터_id": test_closet_items[6].id
+                "top_id": test_closet_items[0].id,
+                "bottom_id": test_closet_items[2].id,
+                "shoes_id": test_closet_items[4].id,
+                "outer_id": test_closet_items[6].id
             },
             {
                 "name": "출근 코디",
-                "상의_id": test_closet_items[1].id,  # 상의만 다름
-                "하의_id": test_closet_items[2].id,
-                "신발_id": test_closet_items[4].id,
-                "아우터_id": test_closet_items[6].id
+                "top_id": test_closet_items[1].id,  # top만 다름
+                "bottom_id": test_closet_items[2].id,
+                "shoes_id": test_closet_items[4].id,
+                "outer_id": test_closet_items[6].id
             },
             {
                 "name": "데이트 코디",
-                "상의_id": test_closet_items[0].id,
-                "하의_id": test_closet_items[3].id,  # 하의만 다름
-                "신발_id": test_closet_items[4].id,
-                "아우터_id": test_closet_items[6].id
+                "top_id": test_closet_items[0].id,
+                "bottom_id": test_closet_items[3].id,  # bottom만 다름
+                "shoes_id": test_closet_items[4].id,
+                "outer_id": test_closet_items[6].id
             }
         ]
         
@@ -97,10 +97,10 @@ class TestGetFavorites:
             favorite = FavoriteOutfit(
                 user_id=test_user.id,
                 name=fav_data["name"],
-                상의_id=fav_data["상의_id"],
-                하의_id=fav_data["하의_id"],
-                신발_id=fav_data["신발_id"],
-                아우터_id=fav_data["아우터_id"]
+                top_id=fav_data["top_id"],
+                bottom_id=fav_data["bottom_id"],
+                shoes_id=fav_data["shoes_id"],
+                outer_id=fav_data["outer_id"]
             )
             test_db.add(favorite)
             favorite_names.append(fav_data["name"])
@@ -161,14 +161,14 @@ class TestGetFavorite:
         
         data = response.json()
         assert data["name"] == "주말 데일리룩"
-        assert data["상의"] is not None
-        assert data["상의"]["name"] == "화이트 티셔츠"
-        assert data["하의"] is not None
-        assert data["하의"]["name"] == "베이지 팬츠"
-        assert data["신발"] is not None
-        assert data["신발"]["name"] == "화이트 운동화"
-        assert data["아우터"] is not None
-        assert data["아우터"]["name"] == "블루 데님 재킷"
+        assert data["top"] is not None
+        assert data["top"]["name"] == "화이트 티셔츠"
+        assert data["bottom"] is not None
+        assert data["bottom"]["name"] == "베이지 팬츠"
+        assert data["shoes"] is not None
+        assert data["shoes"]["name"] == "화이트 운동화"
+        assert data["outer"] is not None
+        assert data["outer"]["name"] == "블루 데님 재킷"
     
     def test_get_favorite_not_found(self, client: TestClient, auth_headers: dict,
                                    test_user: User):
@@ -245,20 +245,20 @@ class TestCreateFavorite:
             FavoriteOutfit.name == "새로운 코디"
         ).first()
         assert favorite is not None
-        assert favorite.상의_id is not None
-        assert favorite.하의_id is not None
-        assert favorite.신발_id is not None
-        assert favorite.아우터_id is not None
+        assert favorite.top_id is not None
+        assert favorite.bottom_id is not None
+        assert favorite.shoes_id is not None
+        assert favorite.outer_id is not None
         
         # 오늘의 코디가 초기화되었는지 확인
         test_db.expire_all()
         today_outfit = test_db.query(TodayOutfit).filter(
             TodayOutfit.user_id == test_user.id
         ).first()
-        assert today_outfit.상의_id is None
-        assert today_outfit.하의_id is None
-        assert today_outfit.신발_id is None
-        assert today_outfit.아우터_id is None
+        assert today_outfit.top_id is None
+        assert today_outfit.bottom_id is None
+        assert today_outfit.shoes_id is None
+        assert today_outfit.outer_id is None
     
     def test_create_favorite_incomplete_outfit(self, client: TestClient, auth_headers: dict,
                                                test_user: User, empty_today_outfit: TodayOutfit):
@@ -347,13 +347,13 @@ class TestCreateFavorite:
         일부만 선택된 코디로 저장 시도 테스트
         
         시나리오:
-        1. 상의, 하의만 선택된 코디
+        1. top, bottom만 선택된 코디
         2. 즐겨찾기로 저장 시도
         3. 400 Bad Request 응답 확인
         """
-        # Given: 상의, 하의만 선택
-        empty_today_outfit.상의_id = test_closet_items[0].id
-        empty_today_outfit.하의_id = test_closet_items[2].id
+        # Given: top, bottom만 선택
+        empty_today_outfit.top_id = test_closet_items[0].id
+        empty_today_outfit.bottom_id = test_closet_items[2].id
         test_db.commit()
         
         # When: 불완전한 코디 저장 시도
@@ -455,10 +455,10 @@ class TestUpdateFavorite:
         favorite2 = FavoriteOutfit(
             user_id=test_user.id,
             name="출근 코디",
-            상의_id=test_closet_items[0].id,
-            하의_id=test_closet_items[2].id,
-            신발_id=test_closet_items[4].id,
-            아우터_id=test_closet_items[6].id
+            top_id=test_closet_items[0].id,
+            bottom_id=test_closet_items[2].id,
+            shoes_id=test_closet_items[4].id,
+            outer_id=test_closet_items[6].id
         )
         test_db.add(favorite2)
         test_db.commit()
@@ -611,10 +611,10 @@ class TestDeleteFavorite:
         favorite1 = FavoriteOutfit(
             user_id=test_user.id,
             name="코디 1",
-            상의_id=test_closet_items[0].id,
-            하의_id=test_closet_items[2].id,
-            신발_id=test_closet_items[4].id,
-            아우터_id=test_closet_items[6].id
+            top_id=test_closet_items[0].id,
+            bottom_id=test_closet_items[2].id,
+            shoes_id=test_closet_items[4].id,
+            outer_id=test_closet_items[6].id
         )
         test_db.add(favorite1)
         favorites.append(favorite1)
@@ -623,10 +623,10 @@ class TestDeleteFavorite:
         favorite2 = FavoriteOutfit(
             user_id=test_user.id,
             name="코디 2",
-            상의_id=test_closet_items[1].id,  # 상의만 다름
-            하의_id=test_closet_items[2].id,
-            신발_id=test_closet_items[4].id,
-            아우터_id=test_closet_items[6].id
+            top_id=test_closet_items[1].id,  # top만 다름
+            bottom_id=test_closet_items[2].id,
+            shoes_id=test_closet_items[4].id,
+            outer_id=test_closet_items[6].id
         )
         test_db.add(favorite2)
         favorites.append(favorite2)
@@ -635,10 +635,10 @@ class TestDeleteFavorite:
         favorite3 = FavoriteOutfit(
             user_id=test_user.id,
             name="코디 3",
-            상의_id=test_closet_items[0].id,
-            하의_id=test_closet_items[3].id,  # 하의만 다름
-            신발_id=test_closet_items[4].id,
-            아우터_id=test_closet_items[6].id
+            top_id=test_closet_items[0].id,
+            bottom_id=test_closet_items[3].id,  # bottom만 다름
+            shoes_id=test_closet_items[4].id,
+            outer_id=test_closet_items[6].id
         )
         test_db.add(favorite3)
         favorites.append(favorite3)

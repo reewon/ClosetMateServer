@@ -21,11 +21,11 @@ def recommend_outfit(
     Args:
         db: DB 세션
         user_id: 사용자 ID
-        existing_items: 이미 선택된 아이템 (예: {"하의": 2})
+        existing_items: 이미 선택된 아이템 (예: {"bottom": 2})
     
     Returns:
         Dict[str, Optional[int]]: 추천된 아이템 ID 딕셔너리
-        예: {"상의": 1, "하의": 2, "신발": 3, "아우터": 4}
+        예: {"top": 1, "bottom": 2, "shoes": 3, "outer": 4}
     
     Raises:
         NotFoundException: 옷장에 아이템이 없는 경우
@@ -46,10 +46,10 @@ def recommend_outfit(
     
     # 카테고리별로 아이템 분류
     items_by_category: Dict[str, List[ClosetItem]] = {
-        "상의": [],
-        "하의": [],
-        "신발": [],
-        "아우터": []
+        "top": [],
+        "bottom": [],
+        "shoes": [],
+        "outer": []
     }
     
     for item in user_items:
@@ -58,7 +58,7 @@ def recommend_outfit(
     
     # 추천 결과 생성
     recommended: Dict[str, Optional[int]] = {}
-    categories = ["상의", "하의", "신발", "아우터"]
+    categories = ["top", "bottom", "shoes", "outer"]
     
     for category in categories:
         if category in existing_items:

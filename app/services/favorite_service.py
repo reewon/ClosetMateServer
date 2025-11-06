@@ -84,18 +84,18 @@ def create_favorite_from_today_outfit(
     
     # 코디가 완성되었는지 확인 (모든 카테고리가 선택되어 있어야 함)
     if not all([
-        today_outfit.상의_id,
-        today_outfit.하의_id,
-        today_outfit.신발_id,
-        today_outfit.아우터_id
+        today_outfit.top_id,
+        today_outfit.bottom_id,
+        today_outfit.shoes_id,
+        today_outfit.outer_id
     ]):
         raise BadRequestException(
-            message="코디를 완성해주세요. (상의, 하의, 신발, 아우터가 모두 선택되어야 합니다)",
+            message="코디를 완성해주세요. (top, bottom, shoes, outer가 모두 선택되어야 합니다)",
             detail={"today_outfit": {
-                "상의_id": today_outfit.상의_id,
-                "하의_id": today_outfit.하의_id,
-                "신발_id": today_outfit.신발_id,
-                "아우터_id": today_outfit.아우터_id
+                "top_id": today_outfit.top_id,
+                "bottom_id": today_outfit.bottom_id,
+                "shoes_id": today_outfit.shoes_id,
+                "outer_id": today_outfit.outer_id
             }}
         )
     
@@ -114,10 +114,10 @@ def create_favorite_from_today_outfit(
     # 같은 조합의 코디가 이미 있는지 확인
     existing_combination = db.query(FavoriteOutfit).filter(
         FavoriteOutfit.user_id == user_id,
-        FavoriteOutfit.상의_id == today_outfit.상의_id,
-        FavoriteOutfit.하의_id == today_outfit.하의_id,
-        FavoriteOutfit.신발_id == today_outfit.신발_id,
-        FavoriteOutfit.아우터_id == today_outfit.아우터_id
+        FavoriteOutfit.top_id == today_outfit.top_id,
+        FavoriteOutfit.bottom_id == today_outfit.bottom_id,
+        FavoriteOutfit.shoes_id == today_outfit.shoes_id,
+        FavoriteOutfit.outer_id == today_outfit.outer_id
     ).first()
     
     if existing_combination:
@@ -130,10 +130,10 @@ def create_favorite_from_today_outfit(
     favorite = FavoriteOutfit(
         user_id=user_id,
         name=name,
-        상의_id=today_outfit.상의_id,
-        하의_id=today_outfit.하의_id,
-        신발_id=today_outfit.신발_id,
-        아우터_id=today_outfit.아우터_id,
+        top_id=today_outfit.top_id,
+        bottom_id=today_outfit.bottom_id,
+        shoes_id=today_outfit.shoes_id,
+        outer_id=today_outfit.outer_id,
         created_at=datetime.utcnow()
     )
     
@@ -142,10 +142,10 @@ def create_favorite_from_today_outfit(
     db.refresh(favorite)
     
     # 오늘의 코디 초기화 (저장 후 초기화)
-    today_outfit.상의_id = None
-    today_outfit.하의_id = None
-    today_outfit.신발_id = None
-    today_outfit.아우터_id = None
+    today_outfit.top_id = None
+    today_outfit.bottom_id = None
+    today_outfit.shoes_id = None
+    today_outfit.outer_id = None
     today_outfit.updated_at = datetime.utcnow()
     
     db.commit()

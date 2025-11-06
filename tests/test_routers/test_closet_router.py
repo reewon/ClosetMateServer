@@ -18,14 +18,14 @@ class TestGetClosetItems:
         카테고리별 옷 조회 성공 테스트
         
         시나리오:
-        1. 상의 카테고리 조회
+        1. top 카테고리 조회
         2. 200 OK 응답 확인
-        3. 상의 2개가 반환되는지 확인
+        3. top 2개가 반환되는지 확인
         """
-        # Given: test_closet_items에 상의 2개 포함됨
+        # Given: test_closet_items에 top 2개 포함됨
         
-        # When: 상의 카테고리 조회
-        response = client.get("/api/v1/closet/상의", headers=auth_headers)
+        # When: top 카테고리 조회
+        response = client.get("/api/v1/closet/top", headers=auth_headers)
         
         # Then: 성공 응답 및 데이터 확인
         assert response.status_code == 200
@@ -34,7 +34,7 @@ class TestGetClosetItems:
         assert isinstance(data, list)
         assert len(data) == 2
         
-        # 상의 아이템 확인
+        # top 아이템 확인
         names = [item["name"] for item in data]
         assert "화이트 티셔츠" in names
         assert "블랙 후드티" in names
@@ -57,8 +57,8 @@ class TestGetClosetItems:
         """
         # Given: test_closet_items fixture 사용하지 않음 (빈 옷장)
         
-        # When: 상의 카테고리 조회
-        response = client.get("/api/v1/closet/상의", headers=auth_headers)
+        # When: top 카테고리 조회
+        response = client.get("/api/v1/closet/top", headers=auth_headers)
         
         # Then: 빈 배열 반환
         assert response.status_code == 200
@@ -90,10 +90,10 @@ class TestGetClosetItems:
         assert data["code"] == 400
         assert data["error"] == "Bad Request"
         assert "잘못된 카테고리" in data["message"]
-        assert "상의" in data["message"]
-        assert "하의" in data["message"]
-        assert "신발" in data["message"]
-        assert "아우터" in data["message"]
+        assert "top" in data["message"]
+        assert "bottom" in data["message"]
+        assert "shoes" in data["message"]
+        assert "outer" in data["message"]
         assert data["detail"]["category"] == "잘못된카테고리"
     
     def test_get_closet_items_unauthorized(self, client: TestClient, test_user: User):
@@ -107,7 +107,7 @@ class TestGetClosetItems:
         # Given: 인증 헤더 없음
         
         # When: 인증 없이 조회
-        response = client.get("/api/v1/closet/상의")
+        response = client.get("/api/v1/closet/top")
         
         # Then: 401 에러 응답
         assert response.status_code == 401
@@ -123,11 +123,11 @@ class TestGetClosetItems:
         모든 카테고리 조회 테스트
         
         시나리오:
-        1. 상의, 하의, 신발, 아우터 각각 조회
+        1. top, bottom, shoes, outer 각각 조회
         2. 각 카테고리별 2개씩 반환 확인
         """
         # Given: 각 카테고리별 2개씩 아이템 존재
-        categories = ["상의", "하의", "신발", "아우터"]
+        categories = ["top", "bottom", "shoes", "outer"]
         
         for category in categories:
             # When: 각 카테고리 조회
@@ -148,15 +148,15 @@ class TestCreateClosetItem:
         옷 추가 성공 테스트
         
         시나리오:
-        1. 새로운 상의 추가
+        1. 새로운 top 추가
         2. 200 OK 응답 확인
         3. DB에 실제로 추가되었는지 확인
         """
         # Given: 추가할 아이템 데이터
         item_data = {"name": "그레이 후드티"}
         
-        # When: 상의 추가 요청
-        response = client.post("/api/v1/closet/상의", 
+        # When: top 추가 요청
+        response = client.post("/api/v1/closet/top", 
                               json=item_data, 
                               headers=auth_headers)
         
@@ -169,13 +169,13 @@ class TestCreateClosetItem:
         # DB에 실제로 추가되었는지 확인
         item = test_db.query(ClosetItem).filter(
             ClosetItem.user_id == test_user.id,
-            ClosetItem.category == "상의",
+            ClosetItem.category == "top",
             ClosetItem.name == "그레이 후드티"
         ).first()
         
         assert item is not None
         assert item.name == "그레이 후드티"
-        assert item.category == "상의"
+        assert item.category == "top"
         assert item.user_id == test_user.id
     
     def test_create_closet_item_invalid_category(self, client: TestClient, auth_headers: dict,
@@ -216,7 +216,7 @@ class TestCreateClosetItem:
         item_data = {}
         
         # When: name 없이 추가 요청
-        response = client.post("/api/v1/closet/상의",
+        response = client.post("/api/v1/closet/top",
                               json=item_data,
                               headers=auth_headers)
         
@@ -235,7 +235,7 @@ class TestCreateClosetItem:
         item_data = {"name": "테스트 아이템"}
         
         # When: 인증 없이 추가
-        response = client.post("/api/v1/closet/상의", json=item_data)
+        response = client.post("/api/v1/closet/top", json=item_data)
         
         # Then: 401 에러 응답
         assert response.status_code == 401
@@ -246,15 +246,15 @@ class TestCreateClosetItem:
         모든 카테고리에 아이템 추가 테스트
         
         시나리오:
-        1. 상의, 하의, 신발, 아우터 각각 추가
+        1. top, bottom, shoes, outer 각각 추가
         2. 모두 성공하는지 확인
         """
         # Given: 각 카테고리별 아이템 데이터
         test_items = [
-            ("상의", "화이트 셔츠"),
-            ("하의", "청바지"),
-            ("신발", "로퍼"),
-            ("아우터", "트렌치코트")
+            ("top", "화이트 셔츠"),
+            ("bottom", "청바지"),
+            ("shoes", "로퍼"),
+            ("outer", "트렌치코트")
         ]
         
         for category, name in test_items:
