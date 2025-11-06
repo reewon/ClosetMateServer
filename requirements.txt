@@ -1,16 +1,21 @@
-# FastAPI 및 서버
+# FastAPI and Server
 fastapi>=0.104.1
 uvicorn[standard]>=0.24.0
 
-# 데이터베이스
+# Database
 sqlalchemy>=2.0.23
 
-# 환경 변수 관리
+# Environment Variables
 pydantic-settings>=2.0.0
 
-# JWT 인증 (추후 사용 예정)
+# JWT Authentication
 python-jose[cryptography]>=3.3.0
 
-# 추가 유틸리티
+# Additional Utilities
 python-multipart>=0.0.6
 
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+httpx>=0.24.0

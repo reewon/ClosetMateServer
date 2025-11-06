@@ -111,6 +111,21 @@ def create_favorite_from_today_outfit(
             detail={"name": name}
         )
     
+    # 같은 조합의 코디가 이미 있는지 확인
+    existing_combination = db.query(FavoriteOutfit).filter(
+        FavoriteOutfit.user_id == user_id,
+        FavoriteOutfit.상의_id == today_outfit.상의_id,
+        FavoriteOutfit.하의_id == today_outfit.하의_id,
+        FavoriteOutfit.신발_id == today_outfit.신발_id,
+        FavoriteOutfit.아우터_id == today_outfit.아우터_id
+    ).first()
+    
+    if existing_combination:
+        raise ConflictException(
+            message=f"이미 저장된 코디입니다 - {existing_combination.name}",
+            detail={"existing_name": existing_combination.name}
+        )
+    
     # 즐겨찾는 코디 생성
     favorite = FavoriteOutfit(
         user_id=user_id,

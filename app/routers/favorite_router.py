@@ -120,7 +120,7 @@ def create_favorite(
 
 
 @router.put("/{id}", response_model=MessageResponse)
-def update_favorite_name(
+def update_favorite_name_endpoint(
     id: int = Path(..., description="즐겨찾는 코디 ID"),
     request: FavoriteOutfitUpdate = ...,
     current_user: User = Depends(get_current_user),
