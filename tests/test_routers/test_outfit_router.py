@@ -59,19 +59,19 @@ class TestGetTodayOutfit:
         # 각 카테고리에 아이템이 있는지 확인
         assert data["top"] is not None
         assert data["top"]["id"] == test_closet_items[0].id
-        assert data["top"]["name"] == "화이트 티셔츠"
+        assert data["top"]["name"] == "white t-shirt"
         
         assert data["bottom"] is not None
         assert data["bottom"]["id"] == test_closet_items[2].id
-        assert data["bottom"]["name"] == "베이지 팬츠"
+        assert data["bottom"]["name"] == "beige pants"
         
         assert data["shoes"] is not None
         assert data["shoes"]["id"] == test_closet_items[4].id
-        assert data["shoes"]["name"] == "화이트 운동화"
+        assert data["shoes"]["name"] == "white sneakers"
         
         assert data["outer"] is not None
         assert data["outer"]["id"] == test_closet_items[6].id
-        assert data["outer"]["name"] == "블루 데님 재킷"
+        assert data["outer"]["name"] == "blue denim jacket"
     
     def test_get_today_outfit_partial(self, client: TestClient, auth_headers: dict,
                                      test_user: User, empty_today_outfit: TodayOutfit,
@@ -96,7 +96,7 @@ class TestGetTodayOutfit:
         
         data = response.json()
         assert data["top"] is not None
-        assert data["top"]["name"] == "화이트 티셔츠"
+        assert data["top"]["name"] == "white t-shirt"
         assert data["bottom"] is None
         assert data["shoes"] is None
         assert data["outer"] is None
@@ -260,7 +260,7 @@ class TestUpdateOutfitItem:
         # Given: bottom 아이템을 top에 설정 시도
         update_data = {
             "category": "top",
-            "item_id": test_closet_items[2].id  # 베이지 팬츠 (bottom)
+            "item_id": test_closet_items[2].id  # beige pants (bottom)
         }
         
         # When: 카테고리가 맞지 않는 아이템으로 변경 시도
@@ -519,7 +519,7 @@ class TestRecommendOutfit:
         item = ClosetItem(
             user_id=test_user.id,
             category="top",
-            name="테스트 상의"
+            name="test top"
         )
         test_db.add(item)
         test_db.commit()
@@ -535,7 +535,7 @@ class TestRecommendOutfit:
         
         # top만 추천되고 나머지는 null
         assert data["top"] is not None
-        assert data["top"]["name"] == "테스트 상의"
+        assert data["top"]["name"] == "test top"
         assert data["bottom"] is None
         assert data["shoes"] is None
         assert data["outer"] is None

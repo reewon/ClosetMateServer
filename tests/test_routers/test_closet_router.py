@@ -36,8 +36,8 @@ class TestGetClosetItems:
         
         # top 아이템 확인
         names = [item["name"] for item in data]
-        assert "화이트 티셔츠" in names
-        assert "블랙 후드티" in names
+        assert "white t-shirt" in names
+        assert "black hoodie" in names
         
         # 응답 구조 확인
         for item in data:
@@ -153,7 +153,7 @@ class TestCreateClosetItem:
         3. DB에 실제로 추가되었는지 확인
         """
         # Given: 추가할 아이템 데이터
-        item_data = {"name": "그레이 후드티"}
+        item_data = {"name": "gray hoodie"}
         
         # When: top 추가 요청
         response = client.post("/api/v1/closet/top", 
@@ -170,11 +170,11 @@ class TestCreateClosetItem:
         item = test_db.query(ClosetItem).filter(
             ClosetItem.user_id == test_user.id,
             ClosetItem.category == "top",
-            ClosetItem.name == "그레이 후드티"
+            ClosetItem.name == "gray hoodie"
         ).first()
         
         assert item is not None
-        assert item.name == "그레이 후드티"
+        assert item.name == "gray hoodie"
         assert item.category == "top"
         assert item.user_id == test_user.id
     
@@ -251,10 +251,10 @@ class TestCreateClosetItem:
         """
         # Given: 각 카테고리별 아이템 데이터
         test_items = [
-            ("top", "화이트 셔츠"),
-            ("bottom", "청바지"),
-            ("shoes", "로퍼"),
-            ("outer", "트렌치코트")
+            ("top", "white shirt"),
+            ("bottom", "jeans"),
+            ("shoes", "loafers"),
+            ("outer", "trench coat")
         ]
         
         for category, name in test_items:

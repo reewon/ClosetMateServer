@@ -54,7 +54,7 @@ class TestGetFavorites:
         data = response.json()
         assert len(data) == 1
         assert data[0]["id"] == test_favorite_outfit.id
-        assert data[0]["name"] == "주말 데일리룩"
+        assert data[0]["name"] == "weekend daily look"
     
     def test_get_favorites_multiple(self, client: TestClient, auth_headers: dict,
                                    test_user: User, test_today_outfit: TodayOutfit,
@@ -70,21 +70,21 @@ class TestGetFavorites:
         # Given: 즐겨찾기 3개 생성 (각각 다른 조합)
         favorites_data = [
             {
-                "name": "주말 코디",
+                "name": "weekend outfit",
                 "top_id": test_closet_items[0].id,
                 "bottom_id": test_closet_items[2].id,
                 "shoes_id": test_closet_items[4].id,
                 "outer_id": test_closet_items[6].id
             },
             {
-                "name": "출근 코디",
+                "name": "work outfit",
                 "top_id": test_closet_items[1].id,  # top만 다름
                 "bottom_id": test_closet_items[2].id,
                 "shoes_id": test_closet_items[4].id,
                 "outer_id": test_closet_items[6].id
             },
             {
-                "name": "데이트 코디",
+                "name": "date outfit",
                 "top_id": test_closet_items[0].id,
                 "bottom_id": test_closet_items[3].id,  # bottom만 다름
                 "shoes_id": test_closet_items[4].id,
@@ -160,15 +160,15 @@ class TestGetFavorite:
         assert response.status_code == 200
         
         data = response.json()
-        assert data["name"] == "주말 데일리룩"
+        assert data["name"] == "weekend daily look"
         assert data["top"] is not None
-        assert data["top"]["name"] == "화이트 티셔츠"
+        assert data["top"]["name"] == "white t-shirt"
         assert data["bottom"] is not None
-        assert data["bottom"]["name"] == "베이지 팬츠"
+        assert data["bottom"]["name"] == "beige pants"
         assert data["shoes"] is not None
-        assert data["shoes"]["name"] == "화이트 운동화"
+        assert data["shoes"]["name"] == "white sneakers"
         assert data["outer"] is not None
-        assert data["outer"]["name"] == "블루 데님 재킷"
+        assert data["outer"]["name"] == "blue denim jacket"
     
     def test_get_favorite_not_found(self, client: TestClient, auth_headers: dict,
                                    test_user: User):
@@ -232,7 +232,7 @@ class TestCreateFavorite:
         
         # When: 즐겨찾기 저장
         response = client.post("/api/v1/favorites",
-                              json={"name": "새로운 코디"},
+                              json={"name": "new outfit"},
                               headers=auth_headers)
         
         # Then: 성공 응답
@@ -242,7 +242,7 @@ class TestCreateFavorite:
         # DB에 저장되었는지 확인
         favorite = test_db.query(FavoriteOutfit).filter(
             FavoriteOutfit.user_id == test_user.id,
-            FavoriteOutfit.name == "새로운 코디"
+            FavoriteOutfit.name == "new outfit"
         ).first()
         assert favorite is not None
         assert favorite.top_id is not None
@@ -292,15 +292,15 @@ class TestCreateFavorite:
         중복된 이름으로 저장 시도 테스트
         
         시나리오:
-        1. 이미 "주말 데일리룩"이라는 즐겨찾기 존재
+        1. 이미 "weekend daily look"이라는 즐겨찾기 존재
         2. 같은 이름으로 저장 시도
         3. 409 Conflict 응답 확인
         """
-        # Given: "주말 데일리룩" 즐겨찾기 이미 존재 (test_favorite_outfit)
+        # Given: "weekend daily look" 즐겨찾기 이미 존재 (test_favorite_outfit)
         
         # When: 같은 이름으로 저장 시도
         response = client.post("/api/v1/favorites",
-                              json={"name": "주말 데일리룩"},
+                              json={"name": "weekend daily look"},
                               headers=auth_headers)
         
         # Then: 409 에러 응답
@@ -327,7 +327,7 @@ class TestCreateFavorite:
         
         # When: 다른 이름으로 저장 시도
         response = client.post("/api/v1/favorites",
-                              json={"name": "새로운 이름"},
+                              json={"name": "new name"},
                               headers=auth_headers)
         
         # Then: 409 에러 응답
@@ -337,8 +337,8 @@ class TestCreateFavorite:
         assert data["status"] == "error"
         assert data["code"] == 409
         assert "이미 저장된 코디입니다" in data["message"]
-        assert "주말 데일리룩" in data["message"]  # 기존 코디명 포함 확인
-        assert data["detail"]["existing_name"] == "주말 데일리룩"
+        assert "weekend daily look" in data["message"]  # 기존 코디명 포함 확인
+        assert data["detail"]["existing_name"] == "weekend daily look"
     
     def test_create_favorite_partial_outfit(self, client: TestClient, auth_headers: dict,
                                            test_user: User, empty_today_outfit: TodayOutfit,
@@ -402,7 +402,7 @@ class TestUpdateFavorite:
         
         # When: 이름 변경 요청
         response = client.put(f"/api/v1/favorites/{test_favorite_outfit.id}",
-                            json={"new_name": "변경된 코디"},
+                            json={"new_name": "changed outfit"},
                             headers=auth_headers)
         
         # Then: 성공 응답
@@ -414,7 +414,7 @@ class TestUpdateFavorite:
         favorite = test_db.query(FavoriteOutfit).filter(
             FavoriteOutfit.id == test_favorite_outfit.id
         ).first()
-        assert favorite.name == "변경된 코디"
+        assert favorite.name == "changed outfit"
     
     def test_update_favorite_name_not_found(self, client: TestClient, auth_headers: dict,
                                            test_user: User):
@@ -454,7 +454,7 @@ class TestUpdateFavorite:
         # Given: 두 번째 즐겨찾기 생성
         favorite2 = FavoriteOutfit(
             user_id=test_user.id,
-            name="출근 코디",
+            name="work outfit",
             top_id=test_closet_items[0].id,
             bottom_id=test_closet_items[2].id,
             shoes_id=test_closet_items[4].id,
@@ -466,7 +466,7 @@ class TestUpdateFavorite:
         
         # When: 첫 번째를 두 번째와 같은 이름으로 변경 시도
         response = client.put(f"/api/v1/favorites/{test_favorite_outfit.id}",
-                            json={"new_name": "출근 코디"},
+                            json={"new_name": "work outfit"},
                             headers=auth_headers)
         
         # Then: 409 에러 응답
@@ -607,10 +607,10 @@ class TestDeleteFavorite:
         # Given: 즐겨찾기 3개 생성 (각각 다른 조합)
         favorites = []
         
-        # 코디 1: 화이트 티셔츠, 베이지 팬츠, 화이트 운동화, 블루 데님 재킷
+        # 코디 1: white t-shirt, beige pants, white sneakers, blue denim jacket
         favorite1 = FavoriteOutfit(
             user_id=test_user.id,
-            name="코디 1",
+            name="outfit 1",
             top_id=test_closet_items[0].id,
             bottom_id=test_closet_items[2].id,
             shoes_id=test_closet_items[4].id,
@@ -619,10 +619,10 @@ class TestDeleteFavorite:
         test_db.add(favorite1)
         favorites.append(favorite1)
         
-        # 코디 2: 블랙 후드티, 베이지 팬츠, 화이트 운동화, 블루 데님 재킷
+        # 코디 2: black hoodie, beige pants, white sneakers, blue denim jacket
         favorite2 = FavoriteOutfit(
             user_id=test_user.id,
-            name="코디 2",
+            name="outfit 2",
             top_id=test_closet_items[1].id,  # top만 다름
             bottom_id=test_closet_items[2].id,
             shoes_id=test_closet_items[4].id,
@@ -631,10 +631,10 @@ class TestDeleteFavorite:
         test_db.add(favorite2)
         favorites.append(favorite2)
         
-        # 코디 3: 화이트 티셔츠, 블랙 슬랙스, 화이트 운동화, 블루 데님 재킷
+        # 코디 3: white t-shirt, black slacks, white sneakers, blue denim jacket
         favorite3 = FavoriteOutfit(
             user_id=test_user.id,
-            name="코디 3",
+            name="outfit 3",
             top_id=test_closet_items[0].id,
             bottom_id=test_closet_items[3].id,  # bottom만 다름
             shoes_id=test_closet_items[4].id,

@@ -5,7 +5,8 @@ ClosetMate API 메인 진입점
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
-from .core.database import engine, Base
+from .core.database import engine, Base, SessionLocal
+from .core.init_db import init_test_data
 from .routers import (
     auth_router,
     closet_router,
@@ -30,13 +31,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 데이터베이스 테이블 생성
+# 데이터베이스 테이블 생성 및 초기 데이터 생성
 @app.on_event("startup")
 def on_startup():
     """
-    앱 시작 시 데이터베이스 테이블 생성
+    앱 시작 시 데이터베이스 테이블 생성 및 테스트용 초기 데이터 생성
     """
+    # 테이블 생성
     Base.metadata.create_all(bind=engine)
+    
+    # 테스트용 초기 데이터 생성 (이미 존재하면 스킵)
+    db = SessionLocal()
+    try:
+        init_test_data(db)
+    finally:
+        db.close()
 
 
 # 라우터 등록
