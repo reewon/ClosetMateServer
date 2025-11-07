@@ -3,13 +3,13 @@
 테스트용 초기 데이터를 생성합니다.
 
 사용법:
-    python init_db.py          # 초기 데이터 생성 (이미 존재하면 스킵)
-    python init_db.py --reset  # 기존 데이터 삭제 후 재생성
+    python init_db.py          # 테스트 데이터 삭제 후 재생성
+    python init_db.py --reset  # 동일 (옵션은 호환성을 위해 유지)
 """
 
 import sys
 from app.core.database import SessionLocal
-from app.core.init_db import init_test_data, reset_test_data
+from app.core.init_db import init_test_data
 
 
 def main():
@@ -19,10 +19,9 @@ def main():
     try:
         if len(sys.argv) > 1 and sys.argv[1] == "--reset":
             print("Resetting test data...")
-            reset_test_data(db)
         else:
             print("Initializing test data...")
-            init_test_data(db)
+        init_test_data(db)
         
         print("\n[OK] Database initialization completed!")
     except Exception as e:
