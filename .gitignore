@@ -45,6 +45,11 @@ venv.bak/
 .env.local
 .env.*.local
 
+# Firebase / Google Cloud credentials
+*firebase-adminsdk*.json
+*service-account*.json
+*credentials*.json
+
 # Database
 *.db
 *.sqlite
