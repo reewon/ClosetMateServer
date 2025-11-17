@@ -3,9 +3,9 @@ from typing import Optional
 
 
 class ItemInfo(BaseModel):
-    """코디 아이템 정보 스키마 (id, name 포함)"""
+    """코디 아이템 정보 스키마 (id, image_url 포함)"""
     id: int
-    name: str
+    image_url: Optional[str] = None  # 이미지 URL (사용자에게 표시용)
 
     class Config:
         from_attributes = True

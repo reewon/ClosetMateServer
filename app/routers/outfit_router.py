@@ -46,7 +46,7 @@ def _convert_to_today_outfit_response(today_outfit, db: Session) -> TodayOutfitR
         if item_id:
             item = db.query(ClosetItem).filter(ClosetItem.id == item_id).first()
             if item:
-                response_data[category] = ItemInfo(id=item.id, name=item.name)
+                response_data[category] = ItemInfo(id=item.id, image_url=item.image_url)
             else:
                 response_data[category] = None
         else:
@@ -168,7 +168,7 @@ def recommend_outfit_endpoint(
         if item_id:
             item = db.query(ClosetItem).filter(ClosetItem.id == item_id).first()
             if item:
-                response_data[category] = ItemInfo(id=item.id, name=item.name)
+                response_data[category] = ItemInfo(id=item.id, image_url=item.image_url)
             else:
                 response_data[category] = None
         else:

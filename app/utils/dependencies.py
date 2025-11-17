@@ -67,6 +67,6 @@ def get_current_user(
     
     return user
 
-
 # JWT 전환 후에는 이 함수를 삭제하고 get_current_user만 사용
+
 

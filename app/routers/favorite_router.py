@@ -47,7 +47,7 @@ def _convert_to_favorite_detail(favorite, db: Session) -> FavoriteOutfitDetail:
         if item_id:
             item = db.query(ClosetItem).filter(ClosetItem.id == item_id).first()
             if item:
-                response_data[category] = ItemInfo(id=item.id, name=item.name)
+                response_data[category] = ItemInfo(id=item.id, image_url=item.image_url)
             else:
                 response_data[category] = None
         else:

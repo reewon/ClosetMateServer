@@ -105,6 +105,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     password = Column(String)  # 지금은 단순 문자열 (test_user만 존재)
+    gender = Column(String, default="남성")  # 성별 (남성, 여성) - 추후 회원가입 시 사용자로부터 받음
 ```
 
 ### 2. ClosetItem
@@ -119,7 +120,7 @@ class ClosetItem(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     category = Column(String)   # top, bottom, shoes, outer
-    name = Column(String)
+    feature = Column(String)    # Gemini API로 추출한 피쳐 정보 (예: '하의_gray_cotton_숏 팬츠_남성_여름_casual')
     image_url = Column(String, nullable=True)
 ```
 
@@ -182,25 +183,25 @@ class FavoriteOutfit(Base):
 
 | Method | Endpoint | Description | Request | Response |
 |--------|----------|-------------|---------|----------|
-| `GET` | `/api/v1/closet/{category}` | 카테고리별 옷 조회 | — | `[{"id":1,"name":"화이트 티셔츠"}]` |
-| `POST` | `/api/v1/closet/{category}` | 옷 추가 | `{ "name": "그레이 슬랙스" }` | `{ "message": "추가 완료" }` |
+| `GET` | `/api/v1/closet/{category}` | 카테고리별 옷 조회 | — | `[{"id":1,"feature":"상의_white_cotton_반소매 티셔츠_남성_여름_casual","image_url":"uploads/user_1/item_1_abc123.jpg"}]` |
+| `POST` | `/api/v1/closet/{category}` | 옷 추가 (이미지 업로드) | `multipart/form-data` (image 파일) | `{ "message": "추가 완료" }` |
 | `DELETE` | `/api/v1/closet/{item_id}` | 옷 삭제 | — | `{ "message": "삭제 완료" }` |
 
 ### 3. Today Outfit (오늘의 코디)
 
 | Method | Endpoint | Description | Request | Response |
 |--------|----------|-------------|---------|----------|
-| `GET` | `/api/v1/outfit/today` | 오늘의 코디 보기 | — | `{ "top": {"id": 1, "name": "화이트 티셔츠"}, "bottom": {"id": 2, "name": "베이지 팬츠"}, ... }` |
+| `GET` | `/api/v1/outfit/today` | 오늘의 코디 보기 | — | `{ "top": {"id": 1, "image_url": "uploads/user_1/item_1_abc123.jpg"}, "bottom": {"id": 2, "image_url": "uploads/user_1/item_2_def456.jpg"}, ... }` |
 | `PUT` | `/api/v1/outfit/today` | 코디 아이템 선택/변경 | `{ "category": "top", "item_id": 3 }` | `{ "message": "top 변경 완료" }` |
 | `PUT` | `/api/v1/outfit/clear` | 특정 카테고리 비우기 | `{ "category": "top" }` | `{ "message": "top 비우기 완료" }` |
-| `POST` | `/api/v1/outfit/recommend` | AI 추천 실행 | — | `{ "top": {"id": ..., "name": "..."}, "bottom": {"id": ..., "name": "..."}, ... }` |
+| `POST` | `/api/v1/outfit/recommend` | AI 추천 실행 | — | `{ "top": {"id": ..., "image_url": "..."}, "bottom": {"id": ..., "image_url": "..."}, ... }` |
 
 ### 4. Favorites (즐겨찾는 코디)
 
 | Method | Endpoint | Description | Request | Response |
 |--------|----------|-------------|---------|----------|
 | `GET` | `/api/v1/favorites` | 즐겨찾는 코디 목록 | — | `[{"id":1,"name":"주말 데일리룩"}]` |
-| `GET` | `/api/v1/favorites/{id}` | 특정 코디 보기 | — | `{ "name": "주말 데일리룩", "top": {"id": ..., "name": "..."}, ...}` |
+| `GET` | `/api/v1/favorites/{id}` | 특정 코디 보기 | — | `{ "name": "주말 데일리룩", "top": {"id": ..., "image_url": "..."}, ...}` |
 | `POST` | `/api/v1/favorites` | 오늘의 코디 즐겨찾기 저장 | `{ "name": "주말 데일리룩" }` | `{ "message": "저장 완료" }` |
 | `PUT` | `/api/v1/favorites/{id}` | 코디 이름 변경 | `{ "new_name": "주말 카페룩" }` | `{ "message": "이름이 변경되었습니다." }` |
 | `DELETE` | `/api/v1/favorites/{id}` | 코디 삭제 | — | `{ "message": "삭제 완료" }` |
@@ -229,11 +230,13 @@ class FavoriteOutfit(Base):
 [
   {
     "id": 1,
-    "name": "화이트 티셔츠"
+    "feature": "상의_white_cotton_반소매 티셔츠_남성_여름_casual",
+    "image_url": "uploads/user_1/item_1_abc123.jpg"
   },
   {
     "id": 2,
-    "name": "블랙 후드티"
+    "feature": "상의_black_cotton_후드 티셔츠_남성_가을_street",
+    "image_url": "uploads/user_1/item_2_def456.jpg"
   }
 ]
 ```
@@ -245,6 +248,11 @@ class FavoriteOutfit(Base):
 
 #### `POST /api/v1/closet/{category}`
 
+**요청 형식**
+- Content-Type: `multipart/form-data`
+- 필드: `image` (이미지 파일)
+- 지원 형식: jpg, jpeg, png, gif, webp
+
 **정상 응답 (200 OK)**
 ```json
 {
@@ -252,7 +260,7 @@ class FavoriteOutfit(Base):
 }
 ```
 
-**비정상 응답 (400 Bad Request)**
+**비정상 응답 (400 Bad Request) - 잘못된 카테고리**
 ```json
 {
   "status": "error",
@@ -261,6 +269,32 @@ class FavoriteOutfit(Base):
   "message": "잘못된 카테고리입니다. 가능한 값: top, bottom, shoes, outer",
   "detail": {
     "category": "잘못된카테고리"
+  }
+}
+```
+
+**비정상 응답 (400 Bad Request) - 이미지 파일이 아닌 경우**
+```json
+{
+  "status": "error",
+  "code": 400,
+  "error": "Bad Request",
+  "message": "이미지 파일만 업로드 가능합니다.",
+  "detail": {
+    "content_type": "application/pdf"
+  }
+}
+```
+
+**비정상 응답 (400 Bad Request) - Gemini API 오류**
+```json
+{
+  "status": "error",
+  "code": 400,
+  "error": "Bad Request",
+  "message": "이미지 분석 중 오류가 발생했습니다: ...",
+  "detail": {
+    "error": "..."
   }
 }
 ```
@@ -299,19 +333,19 @@ class FavoriteOutfit(Base):
 {
   "top": {
     "id": 1,
-    "name": "화이트 티셔츠"
+    "image_url": "uploads/user_1/item_1_abc123.jpg"
   },
   "bottom": {
     "id": 2,
-    "name": "베이지 팬츠"
+    "image_url": "uploads/user_1/item_2_def456.jpg"
   },
   "shoes": {
     "id": 3,
-    "name": "화이트 운동화"
+    "image_url": "uploads/user_1/item_3_ghi789.jpg"
   },
   "outer": {
     "id": 4,
-    "name": "블루 데님 재킷"
+    "image_url": "uploads/user_1/item_4_jkl012.jpg"
   }
 }
 ```
@@ -321,7 +355,7 @@ class FavoriteOutfit(Base):
 {
   "top": {
     "id": 1,
-    "name": "화이트 티셔츠"
+    "image_url": "uploads/user_1/item_1_abc123.jpg"
   },
   "bottom": null,
   "shoes": null,
@@ -392,38 +426,38 @@ class FavoriteOutfit(Base):
 {
   "top": {
     "id": 5,
-    "name": "그레이 후드티"
+    "image_url": "uploads/user_1/item_5_mno345.jpg"
   },
   "bottom": {
     "id": 6,
-    "name": "블랙 슬랙스"
+    "image_url": "uploads/user_1/item_6_pqr678.jpg"
   },
   "shoes": {
     "id": 7,
-    "name": "컨버스"
+    "image_url": "uploads/user_1/item_7_stu901.jpg"
   },
   "outer": {
     "id": 8,
-    "name": "블랙 패딩"
+    "image_url": "uploads/user_1/item_8_vwx234.jpg"
   }
 }
 ```
 
-**정상 응답 - 부분 추천 (200 OK)**  
+**정상 응답 - 부분 추천 (200 OK)**
 *(이미 선택된 아이템이 있는 경우 해당 카테고리는 유지되고 나머지만 추천)*
 ```json
 {
   "top": {
     "id": 1,
-    "name": "화이트 티셔츠"
+    "image_url": "uploads/user_1/item_1_abc123.jpg"
   },
   "bottom": {
     "id": 6,
-    "name": "블랙 슬랙스"
+    "image_url": "uploads/user_1/item_6_pqr678.jpg"
   },
   "shoes": {
     "id": 7,
-    "name": "컨버스"
+    "image_url": "uploads/user_1/item_7_stu901.jpg"
   },
   "outer": null
 }
@@ -476,19 +510,19 @@ class FavoriteOutfit(Base):
   "name": "주말 데일리룩",
   "top": {
     "id": 1,
-    "name": "화이트 티셔츠"
+    "image_url": "uploads/user_1/item_1_abc123.jpg"
   },
   "bottom": {
     "id": 2,
-    "name": "베이지 팬츠"
+    "image_url": "uploads/user_1/item_2_def456.jpg"
   },
   "shoes": {
     "id": 3,
-    "name": "화이트 운동화"
+    "image_url": "uploads/user_1/item_3_ghi789.jpg"
   },
   "outer": {
     "id": 4,
-    "name": "블루 데님 재킷"
+    "image_url": "uploads/user_1/item_4_jkl012.jpg"
   }
 }
 ```

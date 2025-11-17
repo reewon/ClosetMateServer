@@ -4,6 +4,7 @@ ClosetMate API 메인 진입점
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from .core.config import settings
 from .core.database import engine, Base, SessionLocal
 from .core.init_db import init_test_data
@@ -47,6 +48,14 @@ def on_startup():
     finally:
         db.close()
 
+
+# 정적 파일 서빙 (이미지 파일 제공)
+# uploads 폴더를 /uploads 경로로 제공
+import os
+uploads_dir = settings.UPLOAD_DIR
+if not os.path.exists(uploads_dir):
+    os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 # 라우터 등록
 app.include_router(auth_router, prefix="/api/v1")
