@@ -56,6 +56,9 @@ venv.bak/
 *.sqlite3
 closet.db
 
+# User uploaded files
+uploads/
+
 # Logs
 *.log
 logs/
