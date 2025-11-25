@@ -165,8 +165,20 @@ def analyze_clothing_image(image_path: str, category: str, user_gender: str = "�
         # 이미지와 프롬프트를 함께 전달하여 분석
         response = model.generate_content([GEMINI_PROMPT, image])
         
-        # 응답 텍스트 추출
+        # 응답 텍스트 추출 및 검증
+        if not hasattr(response, 'text') or response.text is None:
+            raise BadRequestException(
+                message="Gemini API가 응답을 반환하지 않았습니다.",
+                detail={"error": "response.text is None", "image_path": image_path}
+            )
+        
         response_text = response.text.strip()
+        
+        if not response_text:
+            raise BadRequestException(
+                message="Gemini API 응답이 비어있습니다.",
+                detail={"error": "response.text is empty", "image_path": image_path}
+            )
         
         # 응답 파싱
         parsed_data = _parse_gemini_response(response_text)
@@ -174,20 +186,30 @@ def analyze_clothing_image(image_path: str, category: str, user_gender: str = "�
         # feature 문자열 형식으로 변환 (사용자 성별 사용)
         feature = _format_feature_string(parsed_data, category, user_gender)
         
+        # 최종 feature 검증
+        if not feature or not feature.strip():
+            raise BadRequestException(
+                message="Feature 정보를 추출할 수 없습니다.",
+                detail={"error": "feature is empty", "parsed_data": parsed_data, "image_path": image_path}
+            )
+        
         return feature
         
+    except BadRequestException:
+        # BadRequestException은 그대로 전달
+        raise
     except Exception as e:
         # Gemini API 오류 처리
         error_message = str(e)
         if "API key" in error_message or "authentication" in error_message.lower():
             raise BadRequestException(
                 message="Gemini API 인증에 실패했습니다. API 키를 확인해주세요.",
-                detail={"error": error_message}
+                detail={"error": error_message, "image_path": image_path}
             )
         elif "quota" in error_message.lower() or "limit" in error_message.lower():
             raise BadRequestException(
                 message="Gemini API 사용량 한도를 초과했습니다.",
-                detail={"error": error_message}
+                detail={"error": error_message, "image_path": image_path}
             )
         else:
             raise BadRequestException(
@@ -227,8 +249,20 @@ def analyze_clothing_image_from_bytes(image_bytes: bytes, category: str, user_ge
         # 이미지와 프롬프트를 함께 전달하여 분석
         response = model.generate_content([GEMINI_PROMPT, image])
         
-        # 응답 텍스트 추출
+        # 응답 텍스트 추출 및 검증
+        if not hasattr(response, 'text') or response.text is None:
+            raise BadRequestException(
+                message="Gemini API가 응답을 반환하지 않았습니다.",
+                detail={"error": "response.text is None"}
+            )
+        
         response_text = response.text.strip()
+        
+        if not response_text:
+            raise BadRequestException(
+                message="Gemini API 응답이 비어있습니다.",
+                detail={"error": "response.text is empty"}
+            )
         
         # 응답 파싱
         parsed_data = _parse_gemini_response(response_text)
@@ -236,8 +270,18 @@ def analyze_clothing_image_from_bytes(image_bytes: bytes, category: str, user_ge
         # feature 문자열 형식으로 변환 (사용자 성별 사용)
         feature = _format_feature_string(parsed_data, category, user_gender)
         
+        # 최종 feature 검증
+        if not feature or not feature.strip():
+            raise BadRequestException(
+                message="Feature 정보를 추출할 수 없습니다.",
+                detail={"error": "feature is empty", "parsed_data": parsed_data}
+            )
+        
         return feature
         
+    except BadRequestException:
+        # BadRequestException은 그대로 전달
+        raise
     except Exception as e:
         # Gemini API 오류 처리
         error_message = str(e)

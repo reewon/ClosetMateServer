@@ -16,3 +16,4 @@ class User(Base):
     today_outfit = relationship("TodayOutfit", back_populates="user", uselist=False, cascade="all, delete-orphan")
     favorite_outfits = relationship("FavoriteOutfit", back_populates="user", cascade="all, delete-orphan")
 
+# 이메일(username 역할 대체) ,username, password(fastapi auth 서버에 보관), gender

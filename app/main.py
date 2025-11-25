@@ -16,6 +16,14 @@ from .routers import (
 )
 from .models import User, ClosetItem, TodayOutfit, FavoriteOutfit  # 테이블 생성용 import
 
+# AI 추천 모델 로더 (서버 시작 시 로드)
+try:
+    from ai_recommendation.model_loader import get_model_loader
+    model_loader = None
+except ImportError:
+    print("⚠️ ai_recommendation 모듈을 찾을 수 없습니다. AI 추천 기능이 비활성화됩니다.")
+    model_loader = None
+
 # FastAPI 앱 생성
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -38,6 +46,8 @@ def on_startup():
     """
     앱 시작 시 데이터베이스 테이블 생성 및 테스트용 초기 데이터 생성
     """
+    global model_loader
+    
     # 테이블 생성
     Base.metadata.create_all(bind=engine)
     
@@ -47,6 +57,15 @@ def on_startup():
         init_test_data(db)
     finally:
         db.close()
+    
+        # AI 추천 모델 로드
+        if get_model_loader is not None:
+            try:
+                model_loader = get_model_loader()
+                print("AI 추천 모델 로드 완료")
+            except Exception as e:
+                print(f"AI 추천 모델 로드 실패: {e}")
+                model_loader = None
 
 
 # 정적 파일 서빙 (이미지 파일 제공)

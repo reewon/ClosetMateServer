@@ -82,20 +82,20 @@ def create_favorite_from_today_outfit(
     # 오늘의 코디 조회
     today_outfit = get_today_outfit(db, user_id)
     
-    # 코디가 완성되었는지 확인 (모든 카테고리가 선택되어 있어야 함)
+    # 코디가 완성되었는지 확인 (필수 카테고리만 선택되어 있어야 함)
+    # outer는 선택 사항이므로 필수 카테고리(top, bottom, shoes)만 확인
     if not all([
         today_outfit.top_id,
         today_outfit.bottom_id,
-        today_outfit.shoes_id,
-        today_outfit.outer_id
+        today_outfit.shoes_id
     ]):
         raise BadRequestException(
-            message="코디를 완성해주세요. (top, bottom, shoes, outer가 모두 선택되어야 합니다)",
+            message="코디를 완성해주세요. (top, bottom, shoes가 모두 선택되어야 합니다)",
             detail={"today_outfit": {
                 "top_id": today_outfit.top_id,
                 "bottom_id": today_outfit.bottom_id,
                 "shoes_id": today_outfit.shoes_id,
-                "outer_id": today_outfit.outer_id
+                "outer_id": today_outfit.outer_id  # outer는 선택 사항이지만 정보 제공
             }}
         )
     

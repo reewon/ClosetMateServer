@@ -59,19 +59,15 @@ class TestGetTodayOutfit:
         # 각 카테고리에 아이템이 있는지 확인
         assert data["top"] is not None
         assert data["top"]["id"] == test_closet_items[0].id
-        assert data["top"]["name"] == "white t-shirt"
         
         assert data["bottom"] is not None
         assert data["bottom"]["id"] == test_closet_items[2].id
-        assert data["bottom"]["name"] == "beige pants"
         
         assert data["shoes"] is not None
         assert data["shoes"]["id"] == test_closet_items[4].id
-        assert data["shoes"]["name"] == "white sneakers"
         
         assert data["outer"] is not None
         assert data["outer"]["id"] == test_closet_items[6].id
-        assert data["outer"]["name"] == "blue denim jacket"
     
     def test_get_today_outfit_partial(self, client: TestClient, auth_headers: dict,
                                      test_user: User, empty_today_outfit: TodayOutfit,
@@ -96,7 +92,7 @@ class TestGetTodayOutfit:
         
         data = response.json()
         assert data["top"] is not None
-        assert data["top"]["name"] == "white t-shirt"
+        assert data["top"]["id"] == test_closet_items[0].id
         assert data["bottom"] is None
         assert data["shoes"] is None
         assert data["outer"] is None
@@ -511,19 +507,38 @@ class TestRecommendOutfit:
         일부 카테고리만 있는 옷장에서 추천 테스트
         
         시나리오:
-        1. top만 옷장에 있는 상태
+        1. 필수 카테고리(top, bottom, shoes)만 옷장에 있는 상태
         2. AI 추천 요청
-        3. top만 추천되고 나머지는 null인지 확인
+        3. 필수 카테고리는 모두 추천되고 outer는 null인지 확인
+        
+        Note: AI 추천은 필수 카테고리(top, bottom, shoes)가 모두 있어야 합니다.
         """
-        # Given: top 아이템만 추가
-        item = ClosetItem(
-            user_id=test_user.id,
-            category="top",
-            name="test top"
-        )
-        test_db.add(item)
+        # Given: 필수 카테고리 아이템만 추가
+        items = [
+            ClosetItem(
+                user_id=test_user.id,
+                category="top",
+                feature="상의_white_cotton_반소매 티셔츠_남성_여름_casual",
+                image_url="https://example.com/top.jpg"
+            ),
+            ClosetItem(
+                user_id=test_user.id,
+                category="bottom",
+                feature="하의_gray_cotton_숏 팬츠_남성_여름_casual",
+                image_url="https://example.com/bottom.jpg"
+            ),
+            ClosetItem(
+                user_id=test_user.id,
+                category="shoes",
+                feature="신발_white_canvas_스니커즈_남성_사계절_casual",
+                image_url="https://example.com/shoes.jpg"
+            ),
+        ]
+        for item in items:
+            test_db.add(item)
         test_db.commit()
-        test_db.refresh(item)
+        for item in items:
+            test_db.refresh(item)
         
         # When: AI 추천 요청
         response = client.post("/api/v1/outfit/recommend", headers=auth_headers)
@@ -533,12 +548,11 @@ class TestRecommendOutfit:
         
         data = response.json()
         
-        # top만 추천되고 나머지는 null
+        # 필수 카테고리는 모두 추천되고 outer는 null
         assert data["top"] is not None
-        assert data["top"]["name"] == "test top"
-        assert data["bottom"] is None
-        assert data["shoes"] is None
-        assert data["outer"] is None
+        assert data["bottom"] is not None
+        assert data["shoes"] is not None
+        assert data["outer"] is None  # outer는 선택 사항
     
     def test_recommend_outfit_unauthorized(self, client: TestClient):
         """

@@ -162,13 +162,17 @@ class TestGetFavorite:
         data = response.json()
         assert data["name"] == "weekend daily look"
         assert data["top"] is not None
-        assert data["top"]["name"] == "white t-shirt"
+        assert "id" in data["top"]
+        assert "image_url" in data["top"]
         assert data["bottom"] is not None
-        assert data["bottom"]["name"] == "beige pants"
+        assert "id" in data["bottom"]
+        assert "image_url" in data["bottom"]
         assert data["shoes"] is not None
-        assert data["shoes"]["name"] == "white sneakers"
+        assert "id" in data["shoes"]
+        assert "image_url" in data["shoes"]
         assert data["outer"] is not None
-        assert data["outer"]["name"] == "blue denim jacket"
+        assert "id" in data["outer"]
+        assert "image_url" in data["outer"]
     
     def test_get_favorite_not_found(self, client: TestClient, auth_headers: dict,
                                    test_user: User):

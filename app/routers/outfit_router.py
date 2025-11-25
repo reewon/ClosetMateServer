@@ -124,7 +124,7 @@ def recommend_outfit_endpoint(
     db: Session = Depends(get_db)
 ):
     """
-    AI 추천 실행 (현재는 랜덤 추천)
+    AI 추천 실행 (Word2Vec 기반 AI 모델 사용)
     
     Args:
         current_user: 현재 사용자

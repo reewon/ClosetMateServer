@@ -138,14 +138,14 @@ def test_closet_items(test_db: Session, test_user: User) -> list[ClosetItem]:
         list[ClosetItem]: 생성된 옷장 아이템 리스트
     """
     items = [
-        ClosetItem(user_id=test_user.id, category="top", name="white t-shirt"),
-        ClosetItem(user_id=test_user.id, category="top", name="black hoodie"),
-        ClosetItem(user_id=test_user.id, category="bottom", name="beige pants"),
-        ClosetItem(user_id=test_user.id, category="bottom", name="black slacks"),
-        ClosetItem(user_id=test_user.id, category="shoes", name="white sneakers"),
-        ClosetItem(user_id=test_user.id, category="shoes", name="converse"),
-        ClosetItem(user_id=test_user.id, category="outer", name="blue denim jacket"),
-        ClosetItem(user_id=test_user.id, category="outer", name="black puffer"),
+        ClosetItem(user_id=test_user.id, category="top", feature="상의_white_cotton_반소매 티셔츠_남성_여름_casual", image_url="https://example.com/top1.jpg"),
+        ClosetItem(user_id=test_user.id, category="top", feature="상의_black_cotton_후드 티셔츠_남성_가을_street", image_url="https://example.com/top2.jpg"),
+        ClosetItem(user_id=test_user.id, category="bottom", feature="하의_beige_cotton_슬랙스_남성_사계절_minimal", image_url="https://example.com/bottom1.jpg"),
+        ClosetItem(user_id=test_user.id, category="bottom", feature="하의_black_polyester_슬랙스_남성_사계절_minimal", image_url="https://example.com/bottom2.jpg"),
+        ClosetItem(user_id=test_user.id, category="shoes", feature="신발_white_canvas_스니커즈_남성_사계절_casual", image_url="https://example.com/shoes1.jpg"),
+        ClosetItem(user_id=test_user.id, category="shoes", feature="신발_black_canvas_스니커즈_남성_사계절_casual", image_url="https://example.com/shoes2.jpg"),
+        ClosetItem(user_id=test_user.id, category="outer", feature="아우터_blue_denim_데님 재킷_남성_가을_casual", image_url="https://example.com/outer1.jpg"),
+        ClosetItem(user_id=test_user.id, category="outer", feature="아우터_black_polyester_패딩_남성_겨울_sporty", image_url="https://example.com/outer2.jpg"),
     ]
     
     for item in items:
