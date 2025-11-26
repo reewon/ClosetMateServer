@@ -49,6 +49,7 @@ venv.bak/
 *firebase-adminsdk*.json
 *service-account*.json
 *credentials*.json
+scripts/test_firebase_auth.html  # Firebase 설정 정보 포함 (민감 정보)
 
 # Database
 *.db
