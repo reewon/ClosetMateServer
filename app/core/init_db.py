@@ -38,8 +38,10 @@ def _create_test_data(db: Session) -> None:
     # Test User 생성
     user = User(
         id=TEST_USER_ID,
+        firebase_uid="test_firebase_uid",  # 테스트용 Firebase UID
+        email="test@example.com",  # 테스트용 이메일
         username=TEST_USERNAME,
-        password="test_password"
+        gender="남성"  # 기본값
     )
     db.add(user)
     db.commit()
@@ -55,18 +57,17 @@ def init_test_data(db: Session) -> None:
     테스트 유저가 없을 때만 생성합니다.
     (기존 데이터는 유지하여 사용자가 추가한 데이터가 삭제되지 않도록 함)
     
+    **주의**: Firebase Auth를 사용하는 경우 테스트 사용자 생성을 비활성화합니다.
+    Firebase 사용자는 로그인 시 자동으로 생성됩니다.
+    
     Args:
         db: DB 세션
     """
     from ..utils.auth_stub import TEST_USER_ID
     
-    # 테스트 유저가 이미 존재하는지 확인
-    existing_user = db.query(User).filter(User.id == TEST_USER_ID).first()
+    # Firebase Auth를 사용하므로 테스트 사용자 생성을 비활성화
+    # Firebase 사용자는 로그인 시 get_current_user에서 자동 생성됨
+    return
     
-    if existing_user is None:
-        # 테스트 유저가 없을 때만 생성 (빈 옷장으로 시작)
-        _create_test_data(db)
-    # 테스트 유저가 이미 있으면 기존 데이터 유지 (사용자가 추가한 데이터 보존)
-
 
 

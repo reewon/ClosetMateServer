@@ -2,11 +2,10 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 from typing import Dict
 from ..core.database import get_db
-from ..utils.auth_stub import verify_test_token, TEST_USER_ID
-# JWT 전환 시: 아래 import로 변경
-# from ..utils.auth_jwt import verify_jwt_token
+from ..utils.auth_firebase import verify_firebase_auth
 from ..models.user import User
 from ..core.exceptions import NotFoundException
+from ..utils.logger import logger
 
 
 def get_db_session() -> Session:
@@ -20,53 +19,65 @@ def get_db_session() -> Session:
 
 
 def get_current_user(
-    # 테스트용: verify_test_token 사용
-    # JWT 전환 시: Depends(verify_test_token) → Depends(verify_jwt_token)로 변경
-    user_info: Dict = Depends(verify_test_token),
+    # Firebase Auth 사용
+    user_info: Dict[str, str] = Depends(verify_firebase_auth),
     db: Session = Depends(get_db)
 ) -> User:
     """
     현재 사용자 정보를 가져오는 의존성 함수
     
-    JWT 전환 시:
-    1. import를 verify_jwt_token으로 변경
-    2. Depends(verify_test_token) → Depends(verify_jwt_token)로 변경
-    3. 자동 생성 로직 제거 (아래 if문 전체 제거)
+    Firebase UID로 사용자를 조회하고, 없으면 자동 생성합니다.
     
     Args:
-        user_info: verify_test_token 또는 verify_jwt_token에서 반환한 사용자 정보
+        user_info: verify_firebase_auth에서 반환한 사용자 정보
+            - "firebase_uid": Firebase 사용자 UID
+            - "email": 사용자 이메일
         db: DB 세션
     
     Returns:
         User: 현재 사용자 객체
     
     Raises:
-        NotFoundException: 사용자를 찾을 수 없는 경우
+        NotFoundException: 사용자를 찾을 수 없고 생성도 실패한 경우
     """
-    user = db.query(User).filter(User.id == user_info["user_id"]).first()
+    firebase_uid = user_info.get("firebase_uid")
+    email = user_info.get("email", "")
+    
+    if not firebase_uid:
+        raise NotFoundException(
+            message="Firebase UID를 찾을 수 없습니다.",
+            detail={"user_info": user_info}
+        )
+    
+    # Firebase UID로 사용자 조회
+    user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
     
     if not user:
-        # 테스트용: 고정된 테스트 사용자만 자동 생성
-        # JWT 전환 시 이 블록 전체를 제거하고 예외만 발생시켜야 함
-        if user_info["user_id"] == TEST_USER_ID and user_info["username"] == "test_user":
+        # 사용자가 없으면 자동 생성
+        # email은 Firebase 토큰에서 가져옴
+        # username과 gender는 기본값 사용 (나중에 /auth/sync로 사용자가 입력한 값으로 업데이트)
+        try:
+            # username은 사용자가 입력하는 닉네임이므로 기본값 사용
+            # 나중에 /auth/sync 엔드포인트로 사용자가 입력한 username과 gender로 업데이트
+            username = f"user_{firebase_uid[:8]}"  # 기본값: "user_" + Firebase UID 앞 8자
+            
             user = User(
-                id=TEST_USER_ID,
-                username=user_info["username"],
-                password="test_password"  # 테스트용
+                firebase_uid=firebase_uid,
+                email=email,
+                username=username,
+                gender="남성"  # 기본값, 나중에 /auth/sync로 업데이트
             )
             db.add(user)
             db.commit()
             db.refresh(user)
-        else:
-            # 테스트용이 아닌 경우 예외 발생
-            # JWT 전환 시에는 이 else 블록만 남김
+            
+            logger.info(f"새 사용자 자동 생성: firebase_uid={firebase_uid}, email={email}")
+        except Exception as e:
+            db.rollback()
+            logger.error(f"사용자 자동 생성 실패: {e}")
             raise NotFoundException(
-                message="사용자를 찾을 수 없습니다.",
-                detail={"user_id": user_info["user_id"]}
+                message="사용자를 생성하는 중 오류가 발생했습니다.",
+                detail={"firebase_uid": firebase_uid, "error": str(e)}
             )
     
     return user
-
-# JWT 전환 후에는 이 함수를 삭제하고 get_current_user만 사용
-
-

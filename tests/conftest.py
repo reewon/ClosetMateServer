@@ -115,8 +115,10 @@ def test_user(test_db: Session) -> User:
     """
     user = User(
         id=1,
+        firebase_uid="test_firebase_uid",  # 테스트용 Firebase UID
+        email="test@example.com",  # 테스트용 이메일
         username="test_user",
-        password="test_password"
+        gender="남성"  # 기본값
     )
     test_db.add(user)
     test_db.commit()

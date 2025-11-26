@@ -6,10 +6,9 @@ class Settings(BaseSettings):
     # 데이터베이스 설정
     DATABASE_URL: str = "sqlite:///./closet.db"
     
-    # JWT 설정 (추후 사용)
-    SECRET_KEY: Optional[str] = None
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    # Firebase 설정
+    # 서비스 계정 키 JSON 파일 경로 지정 (.env 파일에 설정)
+    FIREBASE_CREDENTIALS_PATH: Optional[str] = None
     
     # Gemini API 설정
     GEMINI_API_KEY: Optional[str] = None

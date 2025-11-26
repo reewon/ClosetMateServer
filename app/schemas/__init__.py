@@ -1,4 +1,4 @@
-from .user_schema import TokenResponse
+from .user_schema import TokenResponse, UserResponse, UserSyncRequest
 from .closet_schema import (
     ClosetItemResponse,
     ClosetItemCreate,
@@ -20,6 +20,8 @@ from .favorite_schema import (
 
 __all__ = [
     "TokenResponse",
+    "UserResponse",
+    "UserSyncRequest",
     "ClosetItemResponse",
     "ClosetItemCreate",
     "MessageResponse",

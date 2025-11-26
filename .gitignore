@@ -52,9 +52,12 @@ venv.bak/
 
 # Database
 *.db
+*.db.backup
 *.sqlite
 *.sqlite3
 closet.db
+*.sql
+*.dump
 
 # User uploaded files
 uploads/

@@ -19,12 +19,6 @@
 
 ## 테스트 실행
 
-### Mock 테스트 (빠르고 안정적)
-```bash
-# Mock을 사용한 단위 테스트 (이미지 파일 불필요)
-pytest tests/test_routers/test_closet_router.py::TestCreateClosetItem -v
-```
-
 ### 실제 이미지 통합 테스트 (Gemini API 호출)
 ```bash
 # 실제 이미지 파일을 사용한 통합 테스트
@@ -35,6 +29,5 @@ pytest tests/test_routers/test_closet_router.py::TestCreateClosetItemWithRealIma
 
 - **실제 Gemini API를 호출**하므로 `.env` 파일에 `GEMINI_API_KEY`가 설정되어 있어야 합니다
 - 이미지 파일이 없으면 통합 테스트는 자동으로 스킵됩니다
-- Mock 테스트는 이미지 파일 없이도 동작합니다
 - 실제 API 호출이므로 테스트 시간이 오래 걸릴 수 있습니다
 

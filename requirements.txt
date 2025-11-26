@@ -4,12 +4,13 @@ uvicorn[standard]>=0.24.0
 
 # Database
 sqlalchemy>=2.0.23
+psycopg2-binary>=2.9.0  # PostgreSQL adapter
 
 # Environment Variables
 pydantic-settings>=2.0.0
 
-# JWT Authentication
-python-jose[cryptography]>=3.3.0
+# Firebase Authentication
+firebase-admin>=6.0.0
 
 # Additional Utilities
 python-multipart>=0.0.6

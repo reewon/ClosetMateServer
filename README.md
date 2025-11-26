@@ -2,6 +2,42 @@
 
 CLI 기반 클라이언트와 통신하는 Python FastAPI 서버입니다.
 
+## 🛠️ 개발 환경
+
+### 필수 요구사항
+
+- **Python**: 3.8 이상
+- **PostgreSQL**: 18.0 이상 (데이터베이스)
+- **Firebase**: Firebase Authentication (인증 서비스)
+
+### 주요 기술 스택
+
+#### 백엔드 프레임워크
+- **FastAPI**: 0.104.1 이상 - RESTful API 프레임워크
+- **Uvicorn**: 0.24.0 이상 - ASGI 서버
+
+#### 데이터베이스
+- **PostgreSQL**: 18.0 - 프로덕션 데이터베이스
+- **SQLAlchemy**: 2.0.23 이상 - ORM
+- **psycopg2-binary**: 2.9.0 이상 - PostgreSQL 어댑터
+
+#### 인증
+- **Firebase Admin SDK**: 6.0.0 이상 - Firebase Authentication 서버 사이드 검증
+
+#### AI/ML
+- **Google Generative AI**: 0.8.0 이상 - Gemini API (이미지 분석, feature 추출)
+- **Word2Vec**: AI 추천 모델 (ai_recommendation 모듈)
+
+#### 기타
+- **Pydantic Settings**: 2.0.0 이상 - 환경 변수 관리
+- **Python Multipart**: 0.0.6 이상 - 파일 업로드 처리
+
+### 개발 도구
+
+- **테스트**: pytest 7.4.0 이상
+- **코드 커버리지**: pytest-cov
+- **HTTP 클라이언트**: httpx (테스트용)
+
 ## 📁 프로젝트 구조
 
 ```
@@ -42,7 +78,6 @@ ClosetmateServer/
 │   │
 │   └── utils/                         # 유틸 함수 / 인증 / 공통 의존성
 │       ├── auth_stub.py               # 테스트용 "Authorization: test-token" 인증
-│       ├── auth_jwt.py                # JWT 인증 (추후 확장용)
 │       ├── dependencies.py            # get_db, get_current_user 등 공통 Depends
 │       └── logger.py                  # 로그 유틸리티
 │
@@ -100,7 +135,7 @@ ClosetmateServer/
 
 - 모든 API는 `Authorization: test-token` 헤더가 필요합니다.
 - 본 토큰은 테스트용 고정 계정(`user_id=1`, `username="test_user"`)으로 인증됩니다.
-- JWT 로그인 기능은 추후 추가될 예정입니다.
+- Firebase Auth 인증 기능은 추후 추가될 예정입니다.
 
 ## ❌ 에러 응답 포맷
 
@@ -143,9 +178,16 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    password = Column(String)  # 지금은 단순 문자열 (test_user만 존재)
-    gender = Column(String, default="남성")  # 성별 (남성, 여성) - Gemini API feature 추출 시 사용
+    
+    # Firebase 인증 관련 필드
+    firebase_uid = Column(String, unique=True, index=True, nullable=False)  # Firebase UID (고유 식별자)
+    email = Column(String, unique=True, index=True, nullable=False)  # 이메일 (로그인 ID 역할)
+    
+    # 사용자 정보
+    username = Column(String, nullable=False)  # 사용자명 (email이 고유 식별자)
+    gender = Column(String, nullable=False, default="남성")  # 성별 (남성, 여성) - Gemini API feature 추출 시 사용
+    
+    # password 필드는 Firebase에서 관리
     
     # 관계 정의
     closet_items = relationship("ClosetItem", back_populates="user", cascade="all, delete-orphan")
