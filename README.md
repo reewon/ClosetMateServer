@@ -133,9 +133,10 @@ ClosetmateServer/
 
 ## 🔐 인증 정책
 
-- 모든 API는 `Authorization: test-token` 헤더가 필요합니다.
-- 본 토큰은 테스트용 고정 계정(`user_id=1`, `username="test_user"`)으로 인증됩니다.
-- Firebase Auth 인증 기능은 추후 추가될 예정입니다.
+- 모든 API는 `Authorization: Bearer <firebase_id_token>` 헤더가 필요합니다.
+- Firebase Authentication을 사용하여 인증합니다.
+- 클라이언트에서 Firebase 로그인 후 받은 ID 토큰을 `Authorization: Bearer <token>` 형식으로 전송해야 합니다.
+- **테스트용**: `/api/v1/auth/test-login` 엔드포인트로 테스트 토큰을 발급받을 수 있습니다 (개발/테스트용).
 
 ## ❌ 에러 응답 포맷
 
@@ -313,11 +314,13 @@ class FavoriteOutfit(Base):
 > **Base URL**: `/api/v1`  
 > 모든 엔드포인트는 `/api/v1` prefix를 사용합니다. (향후 AI 모델 업그레이드 시 v2로 확장 가능)
 
-### 1. Auth (테스트용 인증)
+### 1. Auth (인증)
 
 | Method | Endpoint | Description | Request | Response |
 |--------|----------|-------------|---------|----------|
-| `GET` | `/api/v1/auth/test-login` | 테스트 토큰 발급 | — | `{ "token": "test-token" }` |
+| `GET` | `/api/v1/auth/test-login` | 테스트 토큰 발급 (개발/테스트용) | — | `{ "token": "test-token" }` |
+| `GET` | `/api/v1/auth/me` | 현재 사용자 정보 조회 | `Authorization: Bearer <token>` | `{ "id": 1, "firebase_uid": "...", "email": "...", "username": "...", "gender": "남성" }` |
+| `POST` | `/api/v1/auth/sync` | 사용자 정보 동기화 (회원가입 후 username, gender 업데이트) | `{ "username": "...", "gender": "남성" }` | `{ "id": 1, "firebase_uid": "...", "email": "...", "username": "...", "gender": "남성" }` |
 
 ### 2. Closet (내 옷장)
 
@@ -352,10 +355,125 @@ class FavoriteOutfit(Base):
 
 #### `GET /api/v1/auth/test-login`
 
+**설명**
+- 개발/테스트용 테스트 토큰 발급 엔드포인트입니다.
+- 프로덕션 환경에서는 사용하지 않는 것을 권장합니다.
+
 **정상 응답 (200 OK)**
 ```json
 {
   "token": "test-token"
+}
+```
+
+---
+
+#### `GET /api/v1/auth/me`
+
+**설명**
+- 현재 인증된 사용자의 정보를 조회합니다.
+- Firebase ID 토큰이 필요합니다 (`Authorization: Bearer <firebase_id_token>`).
+
+**정상 응답 (200 OK)**
+```json
+{
+  "id": 1,
+  "firebase_uid": "abc123def456",
+  "email": "user@example.com",
+  "username": "user_abc123",
+  "gender": "남성"
+}
+```
+
+**비정상 응답 (401 Unauthorized) - 토큰이 제공되지 않은 경우**
+```json
+{
+  "status": "error",
+  "code": 401,
+  "error": "Unauthorized",
+  "message": "인증 토큰이 제공되지 않았습니다.",
+  "detail": {
+    "header": "Authorization"
+  }
+}
+```
+
+**비정상 응답 (401 Unauthorized) - 유효하지 않은 토큰**
+```json
+{
+  "status": "error",
+  "code": 401,
+  "error": "Unauthorized",
+  "message": "유효하지 않은 인증 토큰입니다.",
+  "detail": {}
+}
+```
+
+---
+
+#### `POST /api/v1/auth/sync`
+
+**설명**
+- 회원가입 후 사용자 정보(username, gender)를 동기화하는 엔드포인트입니다.
+- Firebase 로그인 후 첫 API 호출 시 사용자가 자동 생성되지만, 기본값으로 설정됩니다.
+- 이 엔드포인트를 통해 사용자가 직접 username과 gender를 설정할 수 있습니다.
+- `gender`는 "남성" 또는 "여성"만 입력 가능합니다.
+
+**요청 본문**
+```json
+{
+  "username": "홍길동",
+  "gender": "남성"
+}
+```
+
+**정상 응답 (200 OK)**
+```json
+{
+  "id": 1,
+  "firebase_uid": "abc123def456",
+  "email": "user@example.com",
+  "username": "홍길동",
+  "gender": "남성"
+}
+```
+
+**비정상 응답 (400 Bad Request) - 잘못된 gender 값**
+```json
+{
+  "status": "error",
+  "code": 400,
+  "error": "Bad Request",
+  "message": "성별은 '남성' 또는 '여성'만 입력 가능합니다.",
+  "detail": {
+    "gender": "기타"
+  }
+}
+```
+
+**비정상 응답 (400 Bad Request) - username이 공백인 경우**
+```json
+{
+  "status": "error",
+  "code": 400,
+  "error": "Bad Request",
+  "message": "사용자명은 공백만으로 구성될 수 없습니다.",
+  "detail": {
+    "username": "   "
+  }
+}
+```
+
+**비정상 응답 (401 Unauthorized) - 인증 토큰이 없는 경우**
+```json
+{
+  "status": "error",
+  "code": 401,
+  "error": "Unauthorized",
+  "message": "인증 토큰이 제공되지 않았습니다.",
+  "detail": {
+    "header": "Authorization"
+  }
 }
 ```
 
@@ -872,7 +990,7 @@ class FavoriteOutfit(Base):
 
 모든 API에서 인증 토큰이 없거나 잘못된 경우:
 
-**비정상 응답 (401 Unauthorized)**
+**비정상 응답 (401 Unauthorized) - 유효하지 않은 토큰**
 ```json
 {
   "status": "error",
@@ -883,7 +1001,7 @@ class FavoriteOutfit(Base):
 }
 ```
 
-**헤더 누락 시 (401 Unauthorized)**
+**비정상 응답 (401 Unauthorized) - 헤더 누락**
 ```json
 {
   "status": "error",
@@ -895,6 +1013,10 @@ class FavoriteOutfit(Base):
   }
 }
 ```
+
+**참고**: 
+- Firebase ID 토큰은 `Authorization: Bearer <firebase_id_token>` 형식으로 전송해야 합니다.
+- 토큰이 만료되면 클라이언트에서 토큰을 갱신한 후 재시도해야 합니다.
 
 ---
 
