@@ -84,11 +84,12 @@ def on_startup():
 
 
 # 정적 파일 서빙 (이미지 파일 제공)
-# uploads 폴더를 /uploads 경로로 제공
+# uploads 폴더를 /api/v1/uploads와 /uploads 경로로 제공 (호환성을 위해 둘 다 마운트)
 import os
 uploads_dir = settings.UPLOAD_DIR
 if not os.path.exists(uploads_dir):
     os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/api/v1/uploads", StaticFiles(directory=uploads_dir), name="uploads_api")
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 # 라우터 등록
@@ -116,4 +117,18 @@ def health_check():
     헬스 체크 엔드포인트
     """
     return {"status": "healthy"}
+
+
+# 서버 직접 실행 (개발용)
+# 프로덕션에서는 uvicorn 명령어 사용 권장
+if __name__ == "__main__":
+    import uvicorn
+    # 0.0.0.0으로 바인딩하여 모든 네트워크 인터페이스에서 접근 가능하도록 설정
+    # 모바일 디바이스에서 접근하려면 필수
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True  # 개발 중 코드 변경 시 자동 재시작
+    )
 

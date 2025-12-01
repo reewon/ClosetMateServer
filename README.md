@@ -43,10 +43,10 @@ CLI 기반 클라이언트와 통신하는 Python FastAPI 서버입니다.
 ```
 ClosetmateServer/
 ├── app/                                # FastAPI 애플리케이션
-│   ├── main.py                        # FastAPI 엔트리포인트
+│   ├── main.py                        # FastAPI 엔트리포인트 (정적 파일 서빙: /api/v1/uploads, /uploads)
 │   │
 │   ├── core/                          # 핵심 설정 (DB, 환경, 예외)
-│   │   ├── config.py                  # 환경 변수 관리 (Gemini API 키, DB URL 등)
+│   │   ├── config.py                  # 환경 변수 관리 (Gemini API 키, 모델 선택, DB URL 등)
 │   │   ├── database.py                # SQLAlchemy 세션 관리
 │   │   ├── exceptions.py              # 공통 예외 처리 핸들러
 │   │   └── init_db.py                 # 데이터베이스 초기화 및 테스트 데이터 생성
@@ -71,8 +71,8 @@ ClosetmateServer/
 │   │
 │   ├── services/                      # 비즈니스 로직
 │   │   ├── ai_service.py              # AI 추천 서비스 (ai_recommendation 모듈 연동)
-│   │   ├── gemini_service.py          # Gemini API 연동 (이미지 분석, feature 추출)
-│   │   ├── storage_service.py         # 이미지 파일 저장/삭제 서비스
+│   │   ├── gemini_service.py          # Gemini API 연동 (이미지 분석, feature 추출, 이미지 리사이즈)
+│   │   ├── storage_service.py         # 이미지 파일 저장/삭제 서비스 (자동 리사이즈 및 최적화)
 │   │   ├── outfit_service.py          # 코디 업데이트, 초기화 등
 │   │   └── favorite_service.py        # 즐겨찾기 로직
 │   │
@@ -321,6 +321,7 @@ class FavoriteOutfit(Base):
 | `GET` | `/api/v1/auth/test-login` | 테스트 토큰 발급 (개발/테스트용) | — | `{ "token": "test-token" }` |
 | `GET` | `/api/v1/auth/me` | 현재 사용자 정보 조회 | `Authorization: Bearer <token>` | `{ "id": 1, "firebase_uid": "...", "email": "...", "username": "...", "gender": "남성" }` |
 | `POST` | `/api/v1/auth/sync` | 사용자 정보 동기화 (회원가입 후 username, gender 업데이트) | `{ "username": "...", "gender": "남성" }` | `{ "id": 1, "firebase_uid": "...", "email": "...", "username": "...", "gender": "남성" }` |
+| `PUT` | `/api/v1/auth/sync` | 사용자 프로필 수정 (username, gender 업데이트) | `{ "username": "...", "gender": "남성" }` | `{ "id": 1, "firebase_uid": "...", "email": "...", "username": "...", "gender": "남성" }` |
 
 ### 2. Closet (내 옷장)
 
@@ -417,6 +418,74 @@ class FavoriteOutfit(Base):
 - 회원가입 후 사용자 정보(username, gender)를 동기화하는 엔드포인트입니다.
 - Firebase 로그인 후 첫 API 호출 시 사용자가 자동 생성되지만, 기본값으로 설정됩니다.
 - 이 엔드포인트를 통해 사용자가 직접 username과 gender를 설정할 수 있습니다.
+- `gender`는 "남성" 또는 "여성"만 입력 가능합니다.
+
+**요청 본문**
+```json
+{
+  "username": "홍길동",
+  "gender": "남성"
+}
+```
+
+**정상 응답 (200 OK)**
+```json
+{
+  "id": 1,
+  "firebase_uid": "abc123def456",
+  "email": "user@example.com",
+  "username": "홍길동",
+  "gender": "남성"
+}
+```
+
+**비정상 응답 (400 Bad Request) - 잘못된 gender 값**
+```json
+{
+  "status": "error",
+  "code": 400,
+  "error": "Bad Request",
+  "message": "성별은 '남성' 또는 '여성'만 입력 가능합니다.",
+  "detail": {
+    "gender": "기타"
+  }
+}
+```
+
+**비정상 응답 (400 Bad Request) - username이 공백인 경우**
+```json
+{
+  "status": "error",
+  "code": 400,
+  "error": "Bad Request",
+  "message": "사용자명은 공백만으로 구성될 수 없습니다.",
+  "detail": {
+    "username": "   "
+  }
+}
+```
+
+**비정상 응답 (401 Unauthorized) - 인증 토큰이 없는 경우**
+```json
+{
+  "status": "error",
+  "code": 401,
+  "error": "Unauthorized",
+  "message": "인증 토큰이 제공되지 않았습니다.",
+  "detail": {
+    "header": "Authorization"
+  }
+}
+```
+
+---
+
+#### `PUT /api/v1/auth/sync`
+
+**설명**
+- 사용자 프로필 수정을 위한 엔드포인트입니다.
+- 프로필 수정 화면에서 username과 gender를 업데이트할 수 있습니다.
+- `POST /api/v1/auth/sync`와 동일한 로직을 사용하지만, 프로필 수정 용도로 사용됩니다.
 - `gender`는 "남성" 또는 "여성"만 입력 가능합니다.
 
 **요청 본문**

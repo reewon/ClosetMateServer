@@ -103,3 +103,63 @@ def sync_user_info(
             detail={"error": str(e)}
         )
 
+
+@router.put("/sync", response_model=UserResponse)
+def update_user_profile(
+    request: UserSyncRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> UserResponse:
+    """
+    사용자 프로필 수정 (username, gender 업데이트)
+    
+    Args:
+        request: 프로필 수정 요청 (username, gender)
+        current_user: 현재 사용자 (Firebase 인증 필요)
+        db: DB 세션
+    
+    Returns:
+        UserResponse: 업데이트된 사용자 정보
+    
+    Raises:
+        BadRequestException: 잘못된 입력값 (gender가 "남성" 또는 "여성"이 아닌 경우)
+    """
+    # gender 유효성 검증
+    if request.gender not in ["남성", "여성"]:
+        raise BadRequestException(
+            message="성별은 '남성' 또는 '여성'만 입력 가능합니다.",
+            detail={"gender": request.gender}
+        )
+    
+    # username 유효성 검증 (빈 문자열 체크는 스키마에서 처리)
+    if not request.username.strip():
+        raise BadRequestException(
+            message="사용자명은 공백만으로 구성될 수 없습니다.",
+            detail={"username": request.username}
+        )
+    
+    # 사용자 정보 업데이트
+    try:
+        current_user.username = request.username.strip()
+        current_user.gender = request.gender
+        
+        db.commit()
+        db.refresh(current_user)
+        
+        logger.info(f"사용자 프로필 수정 완료: firebase_uid={current_user.firebase_uid}, username={current_user.username}")
+        
+        return UserResponse(
+            id=current_user.id,
+            firebase_uid=current_user.firebase_uid,
+            email=current_user.email,
+            username=current_user.username,
+            gender=current_user.gender
+        )
+    except Exception as e:
+        db.rollback()
+        logger.error(f"사용자 프로필 수정 실패: {e}")
+        raise BadRequestException(
+            message="사용자 정보 업데이트 중 오류가 발생했습니다.",
+            detail={"error": str(e)}
+        )
+

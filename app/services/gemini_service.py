@@ -7,10 +7,19 @@ import os
 import re
 from typing import Optional
 from pathlib import Path
+from io import BytesIO
 import google.generativeai as genai
 from PIL import Image
 from ..core.config import settings
 from ..core.exceptions import BadRequestException
+
+# PIL 이미지 크기 제한 늘리기 (DecompressionBombWarning 방지)
+# 기본값: 89,478,485 픽셀 -> 200,000,000 픽셀로 증가
+Image.MAX_IMAGE_PIXELS = 200000000
+
+# Gemini API에 전송할 이미지 최대 크기
+# 옷의 세부 특징(패턴, 텍스처 등) 분석을 위해 적절한 해상도 유지
+GEMINI_IMAGE_MAX_SIZE = 1536  # 1536x1536 픽셀 (속도와 정확도의 균형)
 
 
 # Gemini API 프롬프트
@@ -128,6 +137,38 @@ def _format_feature_string(parsed_data: dict, category: str, user_gender: str) -
     return feature
 
 
+def _resize_image_for_gemini(image: Image.Image, max_size: int = GEMINI_IMAGE_MAX_SIZE) -> Image.Image:
+    """
+    Gemini API에 전송하기 위해 이미지를 리사이즈
+    (옷의 세부 특징 분석을 위해 적절한 해상도 유지하면서 전송 크기 최적화)
+    
+    Args:
+        image: PIL Image 객체
+        max_size: 최대 크기 (가로 또는 세로 중 큰 값, 기본값: 1536px)
+    
+    Returns:
+        Image.Image: 리사이즈된 이미지 (LANCZOS 리샘플링으로 고품질 유지)
+    """
+    width, height = image.size
+    
+    # 이미지가 max_size보다 작으면 리사이즈하지 않음
+    if width <= max_size and height <= max_size:
+        return image
+    
+    # 비율 유지하면서 리사이즈
+    if width > height:
+        new_width = max_size
+        new_height = int(height * (max_size / width))
+    else:
+        new_height = max_size
+        new_width = int(width * (max_size / height))
+    
+    # 고품질 리샘플링 사용
+    resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    
+    return resized_image
+
+
 def analyze_clothing_image(image_path: str, category: str, user_gender: str = "남성") -> str:
     """
     이미지에서 옷의 피쳐 정보를 추출하는 함수
@@ -159,8 +200,12 @@ def analyze_clothing_image(image_path: str, category: str, user_gender: str = "�
         # 이미지 로드
         image = Image.open(image_path)
         
-        # Gemini 모델 선택
-        model = genai.GenerativeModel('gemini-2.5-pro')
+        # Gemini API에 전송하기 위해 이미지 리사이즈 (속도 향상)
+        image = _resize_image_for_gemini(image)
+        
+        # Gemini 모델 선택 (설정에서 모델 선택 가능)
+        model_name = getattr(settings, 'GEMINI_MODEL', 'gemini-2.5-flash')
+        model = genai.GenerativeModel(model_name)
         
         # 이미지와 프롬프트를 함께 전달하여 분석
         response = model.generate_content([GEMINI_PROMPT, image])
@@ -240,11 +285,14 @@ def analyze_clothing_image_from_bytes(image_bytes: bytes, category: str, user_ge
     
     try:
         # 바이너리 데이터를 PIL Image로 변환
-        from io import BytesIO
         image = Image.open(BytesIO(image_bytes))
         
-        # Gemini 모델 선택
-        model = genai.GenerativeModel('gemini-2.5-pro')
+        # Gemini API에 전송하기 위해 이미지 리사이즈 (속도 향상)
+        image = _resize_image_for_gemini(image)
+        
+        # Gemini 모델 선택 (설정에서 모델 선택 가능)
+        model_name = getattr(settings, 'GEMINI_MODEL', 'gemini-2.5-flash')
+        model = genai.GenerativeModel(model_name)
         
         # 이미지와 프롬프트를 함께 전달하여 분석
         response = model.generate_content([GEMINI_PROMPT, image])

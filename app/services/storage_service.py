@@ -9,6 +9,8 @@ import uuid
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import BinaryIO
+from io import BytesIO
+from PIL import Image
 from ..core.config import settings
 from ..core.exceptions import BadRequestException, InternalServerErrorException
 
@@ -107,9 +109,63 @@ class LocalFileStorage(StorageService):
                 detail={"file_extension": file_extension}
             )
     
+    def _resize_image(self, image_bytes: bytes, max_size: int = 2000) -> bytes:
+        """
+        이미지를 리사이즈하여 최적화
+        
+        Args:
+            image_bytes: 원본 이미지 바이너리 데이터
+            max_size: 최대 크기 (가로 또는 세로 중 큰 값, 기본값: 2000px)
+        
+        Returns:
+            bytes: 리사이즈된 이미지 바이너리 데이터
+        """
+        try:
+            # 이미지 열기
+            image = Image.open(BytesIO(image_bytes))
+            
+            # 원본 크기 확인
+            width, height = image.size
+            
+            # 이미지가 max_size보다 작으면 리사이즈하지 않음
+            if width <= max_size and height <= max_size:
+                return image_bytes
+            
+            # 비율 유지하면서 리사이즈
+            if width > height:
+                new_width = max_size
+                new_height = int(height * (max_size / width))
+            else:
+                new_height = max_size
+                new_width = int(width * (max_size / height))
+            
+            # 리사이즈 (고품질 리샘플링 사용)
+            resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+            # RGB 모드로 변환 (JPEG 저장을 위해)
+            if resized_image.mode in ('RGBA', 'LA', 'P'):
+                # 투명도가 있는 이미지는 흰색 배경에 합성
+                rgb_image = Image.new('RGB', resized_image.size, (255, 255, 255))
+                if resized_image.mode == 'P':
+                    resized_image = resized_image.convert('RGBA')
+                rgb_image.paste(resized_image, mask=resized_image.split()[-1] if resized_image.mode == 'RGBA' else None)
+                resized_image = rgb_image
+            elif resized_image.mode != 'RGB':
+                resized_image = resized_image.convert('RGB')
+            
+            # 바이너리로 변환
+            output = BytesIO()
+            resized_image.save(output, format='JPEG', quality=85, optimize=True)
+            return output.getvalue()
+            
+        except Exception as e:
+            # 리사이즈 실패 시 원본 반환
+            print(f"이미지 리사이즈 실패 (원본 사용): {str(e)}")
+            return image_bytes
+    
     def save_image(self, image_bytes: bytes, user_id: int, item_id: int, file_extension: str) -> str:
         """
-        이미지를 저장하고 상대 경로를 반환
+        이미지를 리사이즈하여 저장하고 상대 경로를 반환
         
         Args:
             image_bytes: 이미지 바이너리 데이터
@@ -127,19 +183,23 @@ class LocalFileStorage(StorageService):
         # 파일 확장자 검증
         self._validate_file_extension(file_extension)
         
+        # 이미지 리사이즈 및 최적화 (모바일에서 빠른 로딩을 위해)
+        optimized_image_bytes = self._resize_image(image_bytes, max_size=2000)
+        
         # 사용자 디렉토리 가져오기
         user_dir = self._get_user_dir(user_id)
         
         # 파일명 생성 (item_id와 UUID를 조합하여 고유성 보장)
         # 형식: item_{item_id}_{uuid}.{extension}
+        # 리사이즈된 이미지는 항상 JPEG로 저장 (최적화)
         unique_id = str(uuid.uuid4())[:8]  # UUID 앞 8자리만 사용
-        filename = f"item_{item_id}_{unique_id}.{file_extension.lower()}"
+        filename = f"item_{item_id}_{unique_id}.jpg"  # 리사이즈 후 항상 JPEG로 저장
         file_path = user_dir / filename
         
         try:
             # 파일 저장
             with open(file_path, "wb") as f:
-                f.write(image_bytes)
+                f.write(optimized_image_bytes)
             
             # 상대 경로 반환 (OS 독립적인 경로 구분자 사용)
             relative_path = str(file_path).replace("\\", "/")

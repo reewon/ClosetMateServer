@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     
     # Gemini API 설정
     GEMINI_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-2.5-flash"  # gemini-2.5-flash 또는 gemini-2.5-flash-lite
     
     # 파일 저장 설정
     UPLOAD_DIR: str = "uploads"  # 옷 아이템 이미지 업로드 디렉토리
