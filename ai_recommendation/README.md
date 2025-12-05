@@ -12,7 +12,7 @@ ai_recommendation/
 ├── SETUP.md                     # 설정 가이드
 ├── train_model.py               # 모델 학습 스크립트
 ├── model_loader.py              # 모델 로드 모듈
-├── recommendation_engine.py      # 추천 엔진 (서버에서 사용, 구현 예정)
+├── recommendation_engine.py      # 추천 엔진 (서버에서 사용)
 ├── data/                        # 학습 데이터 (CSV 파일 배치)
 │   ├── sentence_comb_fin.csv    # 코디 문장 데이터 (필수)
 │   └── total_final_data.csv     # 상품 카테고리 데이터 (필수)
@@ -80,11 +80,8 @@ result = recommend_outfit(
    - `.gitignore`에 추가 권장
    - 서버 배포 시 별도로 전송 필요
 
-2. **데이터 경로**: 
-   - `train_model.py`는 `data/` 디렉토리에서 CSV 파일을 읽습니다.
-   - 경로가 맞는지 확인하세요.
 
-3. **모델 재학습**:
+2(4). **모델 재학습**:
    - 데이터가 업데이트되면 `train_model.py`를 다시 실행
    - 서버 재시작 시 자동으로 새 모델 로드
 

@@ -30,3 +30,11 @@ class UserSyncRequest(BaseModel):
     class Config:
         from_attributes = True
 
+
+class UserProfileUpdateRequest(BaseModel):
+    """사용자 프로필 수정 요청 스키마 (선택적 필드)"""
+    username: Optional[str] = Field(None, min_length=1, max_length=50, description="사용자 닉네임")
+    gender: Optional[str] = Field(None, description="성별 (남성 또는 여성)")
+
+    class Config:
+        from_attributes = True
